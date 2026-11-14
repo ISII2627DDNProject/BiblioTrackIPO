@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTrack - Detalle de Autor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .mobile-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <script src="accesibilidad.js"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="mobile-container bg-white shadow-2xl relative flex flex-col sm:rounded-[2.5rem] sm:h-[800px] sm:border-[8px] sm:border-gray-900 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-white pt-5 pb-2 px-4 z-10 sticky top-0">
+            <div class="flex justify-between items-center mb-4 text-sm font-bold">
+                <span>9:41</span>
+                <div class="flex space-x-2 items-center">
+                    <i class="fa-solid fa-signal text-xs"></i>
+                    <i class="fa-solid fa-wifi text-xs"></i>
+                    <i class="fa-solid fa-battery-full text-lg"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center relative py-2">
+                <button onclick="window.history.back()" class="absolute left-0 text-gray-900 text-xl px-2 active:scale-95 transition-transform">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h1 id="header-autor" class="w-full text-center text-lg font-bold text-gray-900">Autores</h1>
+            </div>
+        </div>
+
+        <!-- Contenido Central Dinámico -->
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4">
+            
+            <!-- Perfil del Autor + Botón Seguir -->
+            <div class="flex flex-col mb-6 mt-2">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div class="flex items-center space-x-3.5 min-w-0">
+                        <img id="autor-img" src="" class="w-16 h-16 rounded-full object-cover border border-gray-200 shadow-sm flex-shrink-0" alt="Autor">
+                        <div class="min-w-0">
+                            <h2 id="autor-nombre" class="text-lg font-bold text-gray-900 leading-tight truncate">Cargando...</h2>
+                            <p id="autor-genero" class="text-xs text-gray-500 font-medium mt-0.5 truncate"></p>
+                        </div>
+                    </div>
+                    <button id="btn-seguir-autor" onclick="toggleSeguirAutor()" type="button"
+                            class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 flex-shrink-0">
+                        <!-- Se actualiza con JS -->
+                    </button>
+                </div>
+                <p id="autor-bio" class="text-sm text-gray-700 leading-relaxed"></p>
+            </div>
+
+            <!-- Buscador interno de libros del autor -->
+            <div class="relative mb-6">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
+                <input id="buscador-libros-autor" type="text" oninput="renderizarLibrosAutor()" placeholder="Buscar libros del autor" class="w-full bg-gray-100 text-gray-900 rounded-xl py-2.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm font-medium">
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+                <span id="autor-num-titulos" class="text-sm text-gray-500 font-medium">0 títulos</span>
+                <button onclick="cambiarOrdenLibros()" type="button" class="flex items-center space-x-1.5 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-900 hover:bg-gray-50">
+                    <i id="icono-orden-autor" class="fa-solid fa-list text-xs"></i>
+                    <span id="texto-orden-autor">Más populares</span>
+                </button>
+            </div>
+
+            <!-- Lista de Libros del Autor -->
+            <div id="lista-libros" class="flex flex-col space-y-6"></div>
+            
+        </div>
+
+        <!-- Barra inferior -->
+        <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex flex-col z-20">
+            <div class="flex justify-between items-center px-6 py-3">
+                <a href="inicio.html" class="text-gray-800 text-2xl flex flex-col items-center"><i class="fa-solid fa-house"></i></a>
+                <a href="subastas.html" class="text-gray-800 text-2xl flex flex-col items-center"><i class="fa-solid fa-gavel"></i></a>
+                <a href="escaner.html" class="text-gray-800 text-3xl flex flex-col items-center">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M4 4h4v2H6v2H4V4zm16 0h-4v2h2v2h2V4zM4 20h4v-2H6v-2H4v4zm16 0h-4v-2h2v-2h2v4zM7 7h10v10H7V7zm2 2v6h6V9H9z"/></svg>
+                </a>
+                <a href="carrito.html" class="text-gray-800 text-2xl flex flex-col items-center"><i class="fa-solid fa-cart-shopping"></i></a>
+                <a href="perfil.html" class="text-gray-800 text-2xl flex flex-col items-center"><i class="fa-regular fa-user"></i></a>
+            </div>
+            <div class="w-full flex justify-center pb-2 pt-1">
+                <div class="w-32 h-1 bg-black rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const baseDatosAutores = {
+            "george": {
+                nombre: "George R.R. Martin",
+                genero: "Fantasía épica",
+                bio: "Creador de Canción de hielo y fuego, la saga que inspiró la serie Juego de Tronos.",
+                imagen: "img/george.jpg",
+                libros: [
+                    { titulo: "Juego de Tronos", precio: "16,50 €", precioNum: 16.50, portada: "img/juego_tronos.jpg", link: "libro.html?id=juego_tronos" },
+                    { titulo: "Choque de reyes", precio: "18,95 €", precioNum: 18.95, portada: "img/choque_reyes.jpg", link: "libro.html?id=choque_reyes" },
+                    { titulo: "Tormenta de espadas", precio: "21,95 €", precioNum: 21.95, portada: "img/tormenta_espadas.jpg", link: "libro.html?id=tormenta_espadas" },
+                    { titulo: "Festín de cuervos", precio: "19,95 €", precioNum: 19.95, portada: "img/festin_cuervos.jpg", link: "libro.html?id=festin_cuervos" }
+                ]
+            },
+            "suzanne": {
+                nombre: "Suzanne Collins",
+                genero: "Distopía · Literatura juvenil",
+                bio: "Reconocida internacionalmente por la trilogía superventas de Los Juegos del Hambre.",
+                imagen: "img/suzanne.jpg",
+                libros: [
+                    { titulo: "Los juegos del Hambre", precio: "13,80 €", precioNum: 13.80, portada: "img/juegos_hambre.jpg", link: "libro.html?id=juegos_hambre" },
+                    { titulo: "En llamas", precio: "14,50 €", precioNum: 14.50, portada: "img/en_llamas.jpg", link: "libro.html?id=en_llamas" }
+                ]
+            },
+            "brandon": {
+                nombre: "Brandon Sanderson",
+                genero: "Fantasía épica · Fantasía moderna",
+                bio: "Maestro de la construcción de mundos y los sistemas de magia complejos (Cosmere).",
+                imagen: "img/brandon.jpg",
+                libros: [
+                    { titulo: "Nacidos de la Bruma", precio: "12,00 €", precioNum: 12.00, portada: "img/nacidos_bruma.jpg", link: "libro.html?id=nacidos_bruma" }
+                ]
+            },
+            "cassandra": {
+                nombre: "Cassandra Clare",
+                genero: "Fantasía urbana · Literatura juvenil",
+                bio: "Autora de la saga Cazadores de Sombras, que combina romance, acción y elementos sobrenaturales.",
+                imagen: "img/cassandra.jpg",
+                libros: [
+                    { titulo: "Ciudad de Hueso", precio: "15,00 €", precioNum: 15.00, portada: "img/ciudad_hueso.jpg", link: "libro.html?id=ciudad_hueso" },
+                    { titulo: "Ciudad de Ceniza", precio: "16,00 €", precioNum: 16.00, portada: "img/ciudad_ceniza.jpg", link: "libro.html?id=ciudad_ceniza" }
+                ]
+            }
+        };
+
+        // Inicializar seguidos si aún no existe en localStorage
+        if (localStorage.getItem('bibliotrack_seguidos') === null) {
+            localStorage.setItem('bibliotrack_seguidos', JSON.stringify(['george', 'brandon']));
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const autorId = params.get('id') || 'george';
+        const autor = baseDatosAutores[autorId];
+        let ordenLibros = 'populares';
+
+        function actualizarBotonSeguir() {
+            const btn = document.getElementById('btn-seguir-autor');
+            const seguidos = JSON.parse(localStorage.getItem('bibliotrack_seguidos') || '[]');
+            const estaSeguido = seguidos.includes(autorId);
+
+            if (estaSeguido) {
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 flex-shrink-0 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50";
+                btn.innerHTML = `<i class="fa-solid fa-check text-[11px]"></i><span>Siguiendo</span>`;
+            } else {
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 flex-shrink-0 bg-black text-white border border-black hover:bg-gray-800";
+                btn.innerHTML = `<i class="fa-solid fa-plus text-[11px]"></i><span>Seguir</span>`;
+            }
+        }
+
+        function toggleSeguirAutor() {
+            let seguidos = JSON.parse(localStorage.getItem('bibliotrack_seguidos') || '[]');
+            if (seguidos.includes(autorId)) {
+                seguidos = seguidos.filter(id => id !== autorId);
+            } else {
+                seguidos.push(autorId);
+            }
+            localStorage.setItem('bibliotrack_seguidos', JSON.stringify(seguidos));
+            actualizarBotonSeguir();
+        }
+
+        function cambiarOrdenLibros() {
+            ordenLibros = (ordenLibros === 'populares') ? 'alfabetico' : 'populares';
+            renderizarLibrosAutor();
+        }
+
+        function renderizarLibrosAutor() {
+            if (!autor) return;
+            const consulta = document.getElementById('buscador-libros-autor').value.toLowerCase().trim();
+            let libros = autor.libros.filter(l => l.titulo.toLowerCase().includes(consulta));
+
+            if (ordenLibros === 'alfabetico') {
+                libros.sort((a, b) => a.titulo.localeCompare(b.titulo));
+                document.getElementById('texto-orden-autor').innerText = "Alfabético";
+                document.getElementById('icono-orden-autor').className = "fa-solid fa-arrow-down-a-z text-xs";
+            } else {
+                document.getElementById('texto-orden-autor').innerText = "Más populares";
+                document.getElementById('icono-orden-autor').className = "fa-solid fa-list text-xs";
+            }
+
+            document.getElementById('autor-num-titulos').innerText = libros.length + (libros.length === 1 ? " título" : " títulos");
+
+            const contenedorLibros = document.getElementById('lista-libros');
+            contenedorLibros.innerHTML = "";
+
+            libros.forEach(libro => {
+                contenedorLibros.innerHTML += `
+                    <div class="flex space-x-4">
+                        <a href="${libro.link}" class="flex-shrink-0">
+                            <img src="${libro.portada}" class="w-20 h-32 object-cover rounded-md shadow-md" alt="${libro.titulo}" onerror="this.src='https://via.placeholder.com/120x180/E5E7EB/9CA3AF?text=Portada'">
+                        </a>
+                        <div class="flex flex-col justify-between py-1 w-full">
+                            <a href="${libro.link}">
+                                <p class="text-xs text-gray-500 font-medium mb-1">${autor.nombre}</p>
+                                <h3 class="text-base font-bold text-gray-900 leading-tight">${libro.titulo}</h3>
+                            </a>
+                            <div class="flex items-center justify-between mt-auto">
+                                <span class="text-lg font-bold text-gray-900">${libro.precio}</span>
+                                <button onclick="anadirAlCarrito(this)" class="bg-black text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center space-x-1.5 active:bg-gray-800 transition-colors">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                    <span>Añadir al carrito</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function anadirAlCarrito(boton) {
+            const original = boton.innerHTML;
+            boton.innerHTML = `<i class="fa-solid fa-check"></i><span>Añadido</span>`;
+            boton.classList.replace('bg-black', 'bg-emerald-700');
+            setTimeout(() => {
+                boton.innerHTML = original;
+                boton.classList.replace('bg-emerald-700', 'bg-black');
+            }, 1200);
+        }
+
+        if (autor) {
+            document.getElementById('autor-img').src = autor.imagen;
+            document.getElementById('autor-nombre').innerText = autor.nombre;
+            document.getElementById('autor-genero').innerText = autor.genero;
+            document.getElementById('autor-bio').innerText = autor.bio;
+            actualizarBotonSeguir();
+            renderizarLibrosAutor();
+        }
+    </script>
+</body>
+</html>

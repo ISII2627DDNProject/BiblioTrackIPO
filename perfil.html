@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTrack - Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .mobile-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Modos de accesibilidad dinámicos (escala rem global en html) */
+        html.texto-grande { font-size: 18.5px; }
+        .alto-contraste .tarjeta-perfil { border-color: #111827 !important; border-width: 1.5px !important; }
+        .alto-contraste .texto-secundario { color: #111827 !important; }
+        .alto-contraste .bg-gray-50 { background-color: #f3f4f6 !important; }
+    </style>
+    <script src="accesibilidad.js"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Contenedor del Móvil -->
+    <div id="contenedor-movil" class="mobile-container bg-white shadow-2xl relative flex flex-col sm:rounded-[2.5rem] sm:h-[800px] sm:border-[8px] sm:border-gray-900 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-white pt-5 pb-2 px-4 z-10 sticky top-0 border-b border-gray-100">
+            <!-- Barra de estado -->
+            <div class="flex justify-between items-center mb-4 text-sm font-bold">
+                <span>9:41</span>
+                <div class="flex space-x-2 items-center">
+                    <i class="fa-solid fa-signal text-xs"></i>
+                    <i class="fa-solid fa-wifi text-xs"></i>
+                    <i class="fa-solid fa-battery-full text-lg"></i>
+                </div>
+            </div>
+
+            <!-- Título Superior -->
+            <div class="flex items-center justify-between py-2">
+                <span class="w-8"></span>
+                <h1 class="text-lg font-bold text-gray-900">Perfil</h1>
+                <button onclick="abrirModalEditar()" aria-label="Editar perfil" class="w-8 h-8 flex items-center justify-center text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenido Central (Scrolleable) -->
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-4">
+            
+            <!-- Tarjeta de Usuario -->
+            <div class="tarjeta-perfil flex items-center justify-between p-4 border border-gray-200 rounded-2xl bg-gray-50 mb-5">
+                <div class="flex items-center space-x-3.5 min-w-0">
+                    <div id="avatar-iniciales" class="w-14 h-14 rounded-full bg-gray-900 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 shadow-sm">
+                        DT
+                    </div>
+                    <div class="min-w-0">
+                        <h2 id="perfil-nombre" class="text-base font-bold text-gray-900 truncate">Daniel Tébar</h2>
+                        <p id="perfil-email" class="texto-secundario text-xs text-gray-500 truncate mt-0.5">daniel@bibliotrack.es</p>
+                        <span id="perfil-genero" class="inline-block mt-1.5 text-[11px] font-semibold bg-white border border-gray-200 text-gray-800 px-2.5 py-0.5 rounded-full">
+                            Fantasía épica
+                        </span>
+                    </div>
+                </div>
+                <button onclick="abrirModalEditar()" class="ml-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-900 hover:bg-gray-100 active:scale-95 transition-all flex-shrink-0">
+                    Editar
+                </button>
+            </div>
+
+            <!-- Resumen de Actividad (Conectado con localStorage) -->
+            <div class="grid grid-cols-3 gap-2.5 mb-6">
+                <a href="inicio.html?filtro=favoritos" class="tarjeta-perfil border border-gray-200 rounded-xl p-3 text-center hover:bg-gray-50 transition-colors">
+                    <p id="stat-favoritos" class="text-lg font-bold text-gray-900">0</p>
+                    <p class="texto-secundario text-[11px] font-medium text-gray-500">Favoritos</p>
+                </a>
+                <a href="inicio.html?filtro=seguidos" class="tarjeta-perfil border border-gray-200 rounded-xl p-3 text-center hover:bg-gray-50 transition-colors">
+                    <p id="stat-seguidos" class="text-lg font-bold text-gray-900">0</p>
+                    <p class="texto-secundario text-[11px] font-medium text-gray-500">Seguidos</p>
+                </a>
+                <button onclick="abrirModalPedidos()" type="button" class="tarjeta-perfil border border-gray-200 rounded-xl p-3 text-center hover:bg-gray-50 transition-colors">
+                    <p class="text-lg font-bold text-gray-900">3</p>
+                    <p class="texto-secundario text-[11px] font-medium text-gray-500">Pedidos</p>
+                </button>
+            </div>
+
+            <!-- Sección 1: Mi Biblioteca y Pedidos -->
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2.5 px-1">Mi actividad</h3>
+                <div class="tarjeta-perfil border border-gray-200 rounded-2xl divide-y divide-gray-100 overflow-hidden">
+                    
+                    <button onclick="abrirModalPedidos()" type="button" class="w-full flex items-center justify-between p-3.5 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors text-left">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-regular fa-file-lines text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Pedidos y alquileres</p>
+                                <p class="texto-secundario text-xs text-gray-500">1 alquiler activo · 2 compras</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </button>
+
+                    <a href="inicio.html?filtro=favoritos" class="flex items-center justify-between p-3.5 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Lista de deseos</p>
+                                <p id="texto-lista-deseos" class="texto-secundario text-xs text-gray-500">2 libros guardados</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </a>
+
+                    <a href="subastas.html" class="flex items-center justify-between p-3.5 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-solid fa-gavel text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Mis pujas activas</p>
+                                <p class="texto-secundario text-xs text-gray-500">Ediciones coleccionista</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Sección 2: Accesibilidad y Preferencias (IPO - La Persona) -->
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2.5 px-1">Accesibilidad y lectura</h3>
+                <div class="tarjeta-perfil border border-gray-200 rounded-2xl divide-y divide-gray-100 overflow-hidden">
+                    
+                    <!-- Tamaño de texto -->
+                    <div class="p-3.5 bg-white">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                    <i class="fa-solid fa-text-height text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">Tamaño de letra</p>
+                                    <p class="texto-secundario text-xs text-gray-500">Mejora la legibilidad en pantalla</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <button id="btn-texto-normal" onclick="cambiarTamanoTexto('normal')" type="button"
+                                    class="py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors">
+                                Estándar
+                            </button>
+                            <button id="btn-texto-grande" onclick="cambiarTamanoTexto('grande')" type="button"
+                                    class="py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors">
+                                Texto grande (A+)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alto contraste -->
+                    <div class="flex items-center justify-between p-3.5 bg-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-solid fa-circle-half-stroke text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Alto contraste</p>
+                                <p class="texto-secundario text-xs text-gray-500">Refuerza bordes y textos</p>
+                            </div>
+                        </div>
+                        <button id="switch-contraste" onclick="toggleAltoContraste()" type="button" role="switch" aria-checked="false"
+                                class="w-11 h-6 bg-gray-200 rounded-full relative transition-colors flex items-center px-0.5 flex-shrink-0">
+                            <span id="knob-contraste" class="w-5 h-5 bg-white rounded-full shadow transition-transform transform translate-x-0"></span>
+                        </button>
+                    </div>
+
+                    <!-- Lectura instantánea NFC -->
+                    <div class="flex items-center justify-between p-3.5 bg-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-solid fa-wifi rotate-90 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Escaneo NFC rápido</p>
+                                <p class="texto-secundario text-xs text-gray-500">Abrir ficha al acercar etiqueta</p>
+                            </div>
+                        </div>
+                        <button id="switch-nfc" onclick="toggleNfc()" type="button" role="switch" aria-checked="true"
+                                class="w-11 h-6 bg-gray-900 rounded-full relative transition-colors flex items-center px-0.5 flex-shrink-0">
+                            <span id="knob-nfc" class="w-5 h-5 bg-white rounded-full shadow transition-transform transform translate-x-5"></span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sección 3: Cuenta y Pagos -->
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2.5 px-1">Cuenta</h3>
+                <div class="tarjeta-perfil border border-gray-200 rounded-2xl divide-y divide-gray-100 overflow-hidden">
+                    
+                    <div class="flex items-center justify-between p-3.5 bg-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-regular fa-credit-card text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Método de pago</p>
+                                <p class="texto-secundario text-xs text-gray-500">Visa terminada en •••• 4821</p>
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Activa</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3.5 bg-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 flex-shrink-0">
+                                <i class="fa-solid fa-location-dot text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Punto de recogida NFC</p>
+                                <p class="texto-secundario text-xs text-gray-500">Biblioteca Campus · Taquilla 04</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Botón Cerrar Sesión -->
+            <a href="login.html" class="w-full py-3.5 border border-red-200 bg-red-50 text-red-600 font-bold text-sm rounded-xl flex items-center justify-center space-x-2 hover:bg-red-100 active:scale-[0.99] transition-all mb-4">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Cerrar sesión</span>
+            </a>
+
+        </div>
+
+        <!-- MODAL INTERNO: EDITAR PERFIL -->
+        <div id="modal-editar" class="hidden absolute inset-0 bg-black/50 z-30 flex items-end justify-center">
+            <div class="bg-white w-full rounded-t-3xl p-5 pb-8 shadow-2xl">
+                <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-bold text-gray-900">Editar perfil</h3>
+                    <button onclick="cerrarModalEditar()" class="text-gray-400 hover:text-gray-800 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form onsubmit="guardarPerfil(event)" class="flex flex-col space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nombre completo</label>
+                        <input id="input-nombre" type="text" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Correo electrónico</label>
+                        <input id="input-email" type="email" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Género favorito</label>
+                        <select id="input-genero" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black">
+                            <option value="Fantasía épica">Fantasía épica</option>
+                            <option value="Distopía · Juvenil">Distopía · Juvenil</option>
+                            <option value="Fantasía urbana">Fantasía urbana</option>
+                            <option value="Ciencia ficción">Ciencia ficción</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl text-sm hover:bg-gray-800 mt-2">
+                        Guardar cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL INTERNO: PEDIDOS Y ALQUILERES -->
+        <div id="modal-pedidos" class="hidden absolute inset-0 bg-black/50 z-30 flex items-end justify-center">
+            <div class="bg-white w-full rounded-t-3xl p-5 pb-8 shadow-2xl max-h-[82%] flex flex-col">
+                <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4 flex-shrink-0"></div>
+                <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Pedidos y alquileres</h3>
+                        <p class="text-xs text-gray-500">Gestiona tus préstamos NFC y compras</p>
+                    </div>
+                    <button onclick="cerrarModalPedidos()" class="text-gray-400 hover:text-gray-800 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="overflow-y-auto no-scrollbar flex flex-col space-y-3">
+                    <!-- Alquiler activo con acceso directo a devolución NFC -->
+                    <div class="p-3.5 border border-amber-200 bg-amber-50/40 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-gray-900">Alquiler #BT-2041</span>
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Quedan 6 días</span>
+                        </div>
+                        <div class="flex items-center space-x-3 mb-3">
+                            <img src="img/nacidos_bruma.jpg" class="w-11 h-16 object-cover rounded shadow-sm" alt="Nacidos de la Bruma">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-900 truncate">Nacidos de la Bruma</p>
+                                <p class="text-xs text-gray-500">Brandon Sanderson · 4,50 €</p>
+                            </div>
+                        </div>
+                        <a href="escaner.html" class="w-full py-2 bg-gray-900 text-white text-xs font-bold rounded-lg flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-qrcode"></i>
+                            <span>Devolver en punto NFC / QR</span>
+                        </a>
+                    </div>
+
+                    <!-- Compra 1 -->
+                    <a href="libro.html?id=juego_tronos" class="p-3.5 border border-gray-200 rounded-xl flex items-center space-x-3 hover:bg-gray-50">
+                        <img src="img/juego_tronos.jpg" class="w-11 h-16 object-cover rounded shadow-sm" alt="Juego de Tronos">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[11px] font-bold text-gray-500">#BT-2048</span>
+                                <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Entregado</span>
+                            </div>
+                            <p class="text-sm font-bold text-gray-900 truncate mt-0.5">Juego de Tronos</p>
+                            <p class="text-xs text-gray-500">Compra · 16,50 €</p>
+                        </div>
+                    </a>
+
+                    <!-- Compra 2 -->
+                    <a href="libro.html?id=juegos_hambre" class="p-3.5 border border-gray-200 rounded-xl flex items-center space-x-3 hover:bg-gray-50">
+                        <img src="img/juegos_hambre.jpg" class="w-11 h-16 object-cover rounded shadow-sm" alt="Los juegos del Hambre">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[11px] font-bold text-gray-500">#BT-2019</span>
+                                <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Entregado</span>
+                            </div>
+                            <p class="text-sm font-bold text-gray-900 truncate mt-0.5">Los juegos del Hambre</p>
+                            <p class="text-xs text-gray-500">Compra · 13,80 €</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Navegación Inferior -->
+        <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex flex-col z-20">
+            <div class="flex justify-between items-center px-6 py-3">
+                <a href="inicio.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="subastas.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-gavel"></i>
+                </a>
+                <a href="escaner.html" class="text-gray-800 hover:text-black text-3xl flex flex-col items-center">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M4 4h4v2H6v2H4V4zm16 0h-4v2h2v2h2V4zM4 20h4v-2H6v-2H4v4zm16 0h-4v-2h2v-2h2v4zM7 7h10v10H7V7zm2 2v6h6V9H9z"/>
+                    </svg>
+                </a>
+                <a href="carrito.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+                <!-- Perfil (Activo) -->
+                <a href="perfil.html" class="text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-user"></i>
+                </a>
+            </div>
+            <div class="w-full flex justify-center pb-2 pt-1">
+                <div class="w-32 h-1 bg-black rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const perfilPorDefecto = {
+            nombre: "Daniel Tébar",
+            email: "daniel@bibliotrack.es",
+            genero: "Fantasía épica"
+        };
+
+        let datosPerfil = JSON.parse(localStorage.getItem('bibliotrack_perfil') || 'null') || perfilPorDefecto;
+        let tamanoTexto = localStorage.getItem('bibliotrack_texto') || 'normal';
+        let altoContraste = localStorage.getItem('bibliotrack_contraste') === 'true';
+        let nfcRapido = localStorage.getItem('bibliotrack_nfc') !== 'false';
+
+        function obtenerIniciales(nombre) {
+            const partes = nombre.trim().split(/\s+/);
+            if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+            return (partes[0][0] + partes[1][0]).toUpperCase();
+        }
+
+        function pintarPerfil() {
+            document.getElementById('perfil-nombre').innerText = datosPerfil.nombre;
+            document.getElementById('perfil-email').innerText = datosPerfil.email;
+            document.getElementById('perfil-genero').innerText = datosPerfil.genero;
+            document.getElementById('avatar-iniciales').innerText = obtenerIniciales(datosPerfil.nombre);
+
+            const favs = JSON.parse(localStorage.getItem('bibliotrack_favoritos') || '["juego_tronos","nacidos_bruma"]');
+            const seguidos = JSON.parse(localStorage.getItem('bibliotrack_seguidos') || '["george","brandon"]');
+
+            document.getElementById('stat-favoritos').innerText = favs.length;
+            document.getElementById('stat-seguidos').innerText = seguidos.length;
+            document.getElementById('texto-lista-deseos').innerText = favs.length + (favs.length === 1 ? " libro guardado" : " libros guardados");
+        }
+
+        // --- ACCESIBILIDAD Y AJUSTES ---
+        function aplicarPreferenciasVisuales() {
+            if (window.aplicarAccesibilidadGlobal) {
+                window.aplicarAccesibilidadGlobal();
+            } else {
+                document.documentElement.classList.toggle('texto-grande', tamanoTexto === 'grande');
+                document.documentElement.classList.toggle('alto-contraste', altoContraste);
+            }
+
+            const btnNormal = document.getElementById('btn-texto-normal');
+            const btnGrande = document.getElementById('btn-texto-grande');
+
+            if (tamanoTexto === 'grande') {
+                btnGrande.className = "py-1.5 px-3 rounded-lg text-xs font-bold border border-black bg-black text-white";
+                btnNormal.className = "py-1.5 px-3 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-800";
+            } else {
+                btnNormal.className = "py-1.5 px-3 rounded-lg text-xs font-bold border border-black bg-black text-white";
+                btnGrande.className = "py-1.5 px-3 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-800";
+            }
+
+            const switchContraste = document.getElementById('switch-contraste');
+            const knobContraste = document.getElementById('knob-contraste');
+            if (altoContraste) {
+                switchContraste.classList.replace('bg-gray-200', 'bg-gray-900');
+                knobContraste.classList.replace('translate-x-0', 'translate-x-5');
+                switchContraste.setAttribute('aria-checked', 'true');
+            } else {
+                switchContraste.classList.replace('bg-gray-900', 'bg-gray-200');
+                knobContraste.classList.replace('translate-x-5', 'translate-x-0');
+                switchContraste.setAttribute('aria-checked', 'false');
+            }
+
+            const switchNfc = document.getElementById('switch-nfc');
+            const knobNfc = document.getElementById('knob-nfc');
+            if (nfcRapido) {
+                switchNfc.classList.replace('bg-gray-200', 'bg-gray-900');
+                knobNfc.classList.replace('translate-x-0', 'translate-x-5');
+                switchNfc.setAttribute('aria-checked', 'true');
+            } else {
+                switchNfc.classList.replace('bg-gray-900', 'bg-gray-200');
+                knobNfc.classList.replace('translate-x-5', 'translate-x-0');
+                switchNfc.setAttribute('aria-checked', 'false');
+            }
+        }
+
+        function cambiarTamanoTexto(nuevoTamano) {
+            tamanoTexto = nuevoTamano;
+            localStorage.setItem('bibliotrack_texto', tamanoTexto);
+            aplicarPreferenciasVisuales();
+        }
+
+        function toggleAltoContraste() {
+            altoContraste = !altoContraste;
+            localStorage.setItem('bibliotrack_contraste', String(altoContraste));
+            aplicarPreferenciasVisuales();
+        }
+
+        function toggleNfc() {
+            nfcRapido = !nfcRapido;
+            localStorage.setItem('bibliotrack_nfc', String(nfcRapido));
+            aplicarPreferenciasVisuales();
+        }
+
+        // --- MODALES INTERNOS ---
+        function abrirModalEditar() {
+            document.getElementById('input-nombre').value = datosPerfil.nombre;
+            document.getElementById('input-email').value = datosPerfil.email;
+            document.getElementById('input-genero').value = datosPerfil.genero;
+            document.getElementById('modal-editar').classList.remove('hidden');
+        }
+
+        function cerrarModalEditar() {
+            document.getElementById('modal-editar').classList.add('hidden');
+        }
+
+        function guardarPerfil(e) {
+            e.preventDefault();
+            datosPerfil = {
+                nombre: document.getElementById('input-nombre').value.trim() || "Daniel Tébar",
+                email: document.getElementById('input-email').value.trim() || "daniel@bibliotrack.es",
+                genero: document.getElementById('input-genero').value
+            };
+            localStorage.setItem('bibliotrack_perfil', JSON.stringify(datosPerfil));
+            pintarPerfil();
+            cerrarModalEditar();
+        }
+
+        function abrirModalPedidos() {
+            document.getElementById('modal-pedidos').classList.remove('hidden');
+        }
+
+        function cerrarModalPedidos() {
+            document.getElementById('modal-pedidos').classList.add('hidden');
+        }
+
+        pintarPerfil();
+        aplicarPreferenciasVisuales();
+    </script>
+
+</body>
+</html>
