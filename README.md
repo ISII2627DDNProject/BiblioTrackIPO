@@ -4,27 +4,34 @@ Prototipo web *mobile-first* de una plataforma de gestión bibliotecaria, compra
 
 ## 🛠️ Stack Tecnológico
 
-* **Estructura:** HTML5 semántico.
-* **Estilos y diseño responsivo:** Tailwind CSS (vía CDN) + Font Awesome 6.
-* **Lógica e interactividad:** JavaScript puro (Vanilla JS).
-* **Persistencia de datos:** `localStorage` del navegador (favoritos, historial de lectura, autores seguidos, perfil de usuario y ajustes de accesibilidad).
+- **Estructura:** HTML5 semántico.
+- **Estilos y diseño responsivo:** Tailwind CSS (vía CDN) + Font Awesome 6.
+- **Lógica e interactividad:** JavaScript puro (Vanilla JS).
+- **APIs Web y Persistencia:** `localStorage` del navegador (carrito, pedidos, favoritos, historial, autores seguidos, perfil y accesibilidad), Web NFC (`NDEFReader`), `BarcodeDetector` (QR), `MediaDevices` (cámara), Web Audio API y Vibration API.
 
 ## 📱 Pantallas y Funcionalidades Implementadas
 
-* **`login.html`:** Pantalla de acceso y autenticación con redirección al flujo principal.
-* **`inicio.html`:**
+- **`login.html`:** Pantalla de acceso y autenticación con redirección al flujo principal.
+- **`inicio.html`:**
   * Buscador global en tiempo real (insensible a mayúsculas y tildes) por título, autor o género.
   * Barra superior de filtros interactivos sincronizados: **Favoritos**, **Historial**, **Pedidos** y **Seguidos**.
   * Carruseles horizontales con soporte táctil y arrastre con ratón.
-* **`autores.html` y `autor.html`:**
+- **`autores.html` y `autor.html`:**
   * Listado general con buscador, ordenación dinámica (popularidad / alfabético) y botón de seguimiento.
   * Plantilla de perfil de autor reutilizable mediante parámetros de URL (`autor.html?id=...`).
-* **`libro.html`:**
-  * Vista de detalle dinámica (`libro.html?id=...`) con portada, sinopsis, ficha técnica, valoraciones y reseñas.
-  * Microinteracción en el botón de favoritos y registro automático en el historial reciente.
-* **`populares.html`:** Catálogo completo filtrable en tiempo real y ordenable por popularidad, orden alfabético o menor precio.
-* **`perfil.html` y `accesibilidad.js`:**
-  * Gestión de datos del usuario, estadísticas en vivo y modal de pedidos/alquileres activos.
+- **`libro.html`:**
+  * Vista de detalle dinámica (`libro.html?id=...`) con código de ejemplar (`BT-001` a `BT-009`), portada, sinopsis, ficha técnica, valoraciones y reseñas.
+  * **Alquiler por plazos:** selector desplegable de **7, 14 y 30 días** con precios diferenciados por libro.
+  * **Acciones conectadas al carrito:** añadir compra o alquiler con aviso visual de confirmación en la propia pantalla sin forzar redirección, además de compra directa y gestión de favoritos/historial.
+- **`escaner.html`:**
+  * Interfaz dual de lectura **NFC** (compatible con lectura en segundo plano en iOS mediante URL `?nfc=...` y lectura directa en Android con Web NFC) y cámara **QR**, más búsqueda manual por código o título.
+  * **Feedback multimodal:** pantalla de confirmación (*Escaneo exitoso*) acompañada de señal sonora (Web Audio API) y vibración háptica (Vibration API).
+- **`carrito.html`:**
+  * Separación visual entre **Subastas ganadas** (pago obligatorio no eliminable con codificación redundante accesible para daltonismo) y **Elegidos por ti** (compras y alquileres opcionales con selector de plazo y eliminación).
+  * Flujo completo de **Resumen de pago**, **Pantalla de pago** (Visa, PayPal y Apple Pay) y **Confirmación con envío de ticket** al correo.
+- **`populares.html`:** Catálogo completo filtrable en tiempo real y ordenable por popularidad, orden alfabético o menor precio.
+- **`perfil.html` y `accesibilidad.js`:**
+  * Gestión de datos del usuario, estadísticas en vivo e historial dinámico de pedidos y alquileres sincronizado tras el pago.
   * Módulo global de accesibilidad aplicable a toda la app: **Texto grande (A+)**, **Alto contraste** y configuración de **Escaneo NFC rápido**.
 
 ## 📂 Estructura del Proyecto
@@ -36,8 +43,10 @@ Prototipo web *mobile-first* de una plataforma de gestión bibliotecaria, compra
     ├── inicio.html           # Pantalla principal y buscador global
     ├── autores.html          # Directorio completo de autores
     ├── autor.html            # Plantilla dinámica de detalle de autor (?id=...)
-    ├── libro.html            # Plantilla dinámica de detalle de libro (?id=...)
+    ├── libro.html            # Detalle de libro, alquiler por plazos y reseñas (?id=...)
     ├── populares.html        # Catálogo completo y ordenación
+    ├── escaner.html          # Lector NFC / QR con feedback multimodal
+    ├── carrito.html          # Carrito, pasarela de pago y ticket
     ├── perfil.html           # Perfil de usuario, pedidos y accesibilidad
     └── README.md             # Documentación del proyecto
 
@@ -51,13 +60,11 @@ Prototipo web *mobile-first* de una plataforma de gestión bibliotecaria, compra
 
 ## 🗺️ Próximos Pasos (Roadmap)
 
-- [ ] **`escaner.html`:** Simulación de lectura de etiquetas NFC y códigos QR para ficha rápida y devolución de préstamos.
-- [ ] **`carrito.html`:** Flujo completo de cesta de compra y alquiler con cálculo de importes y confirmación de pedido.
-- [ ] **`subastas.html`:** Sala de pujas en tiempo real para ediciones especiales y libros descatalogados.
-- [ ] Conexión de los botones de acción de `libro.html` (*Añadir al carrito*, *Alquilar* y *Añadir reseña*).
+- [ ] **`subastas.html`:** Sala de pujas en vivo (*Ediciones especiales* y *De lector a lector*) aplicando agrupación Gestalt (máximo 2-3 tarjetas por bloque para reducir la carga cognitiva) y temporizadores con codificación redundante.
+- [ ] **Sistema de reseñas en `libro.html`:** Implementar el formulario funcional de **Añadir reseña** (puntuación por estrellas, título y comentario) con persistencia en `localStorage` y recálculo dinámico de la nota media.
 
 ## 👥 Equipo de Desarrollo
 
-* **Integrante 1:** [Daniel Tébar Fernández]
-* **Integrante 2:** [David Ortega Carrasco]
-* **Integrante 3:** [Néstor Martí Serrano]
+- **Integrante 1:** Daniel Tébar Fernández
+- **Integrante 2:** David Ortega Carrasco
+- **Integrante 3:** Néstor Martí Serrano

@@ -21,7 +21,6 @@
         
         <!-- Header: Barra de estado y Navegación -->
         <div class="bg-white pt-5 pb-2 px-4 z-10 sticky top-0 border-b border-gray-100">
-            <!-- Barra de estado -->
             <div class="flex justify-between items-center mb-4 text-sm font-bold">
                 <span>9:41</span>
                 <div class="flex space-x-2 items-center">
@@ -37,8 +36,9 @@
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 <h1 class="text-base font-bold text-gray-900">BiblioTrack</h1>
-                <a href="carrito.html" class="text-gray-900 text-lg px-1">
+                <a href="carrito.html" class="relative text-gray-900 text-lg px-1">
                     <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="badge-carrito-header" class="hidden absolute -top-1.5 -right-1.5 bg-[#9E472A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </a>
             </div>
         </div>
@@ -46,39 +46,79 @@
         <!-- Contenido Central Dinámico -->
         <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
             
-            <!-- Contenedor Gris de Portada -->
-            <div class="relative bg-gray-50 flex justify-center items-center py-8 px-4 mb-5 border-b border-gray-100">
-                <img id="libro-portada" src="" class="w-[140px] h-[210px] object-cover shadow-md" alt="Portada" onerror="this.src='https://via.placeholder.com/140x210/E5E7EB/9CA3AF?text=Portada'">
-                <!-- Botón Favoritos -->
-                <button onclick="toggleFavorito()" class="absolute top-4 right-4 bg-white border border-gray-200 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm hover:bg-gray-50 active:scale-95 transition-all">
+            <!-- Contenedor de Portada -->
+            <div class="relative bg-[#FAF5F2] flex justify-center items-center py-8 px-4 mb-5 border-b border-[#EFE3DC]">
+                <img id="libro-portada" src="" class="w-[140px] h-[210px] object-cover shadow-md rounded-sm" alt="Portada" onerror="this.src='https://via.placeholder.com/140x210/E5E7EB/9CA3AF?text=Portada'">
+                <button onclick="toggleFavorito()" aria-label="Guardar en favoritos" class="absolute top-4 right-4 bg-white border border-gray-200 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm hover:bg-gray-50 active:scale-95 transition-all">
                     <i id="icono-favorito" class="fa-regular fa-heart text-gray-900 transition-transform duration-200"></i>
                 </button>
             </div>
             
-            <!-- Título y Valoración rápida -->
+            <!-- Título, Código y Valoración rápida -->
             <div class="px-5 mb-5">
-                <h2 id="libro-titulo" class="text-[22px] font-bold text-gray-900 leading-tight mb-1">Cargando...</h2>
+                <div class="flex items-start justify-between gap-2 mb-1">
+                    <h2 id="libro-titulo" class="text-[22px] font-bold text-gray-900 leading-tight">Cargando...</h2>
+                    <span id="libro-codigo-badge" class="mt-1 text-[11px] font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md flex-shrink-0">BT-000</span>
+                </div>
                 <p id="libro-autor" class="text-sm font-medium text-gray-500 mb-1.5"></p>
                 
                 <div class="flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
-                    <i class="fa-solid fa-star text-gray-500 text-[10px]"></i>
+                    <i class="fa-solid fa-star text-[#9E472A] text-[10px]"></i>
                     <span id="libro-valoracion">0,0 / 5 - 0 valoraciones</span>
                 </div>
             </div>
 
             <!-- Precio y Botones de Acción -->
             <div class="px-5 mb-8">
-                <div class="text-[22px] font-bold text-gray-900 mb-4" id="libro-precio">0,00 €</div>
+                <div class="flex items-baseline justify-between mb-4">
+                    <div class="text-[22px] font-bold text-gray-900" id="libro-precio">0,00 €</div>
+                    <span id="libro-precio-alquiler-desde" class="text-xs font-medium text-gray-500">Alquiler desde 2,95 €</span>
+                </div>
+
+                <!-- Notificación visual en pantalla al añadir al carrito (sin redirigir) -->
+                <div id="aviso-anadido" class="hidden mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-700 text-sm"></i>
+                        <span id="texto-aviso-anadido" class="text-xs font-bold text-emerald-900">Añadido al carrito</span>
+                    </div>
+                    <a href="carrito.html" class="text-xs font-bold text-[#9E472A] underline">Ver carrito</a>
+                </div>
 
                 <div class="flex flex-col space-y-3">
-                    <button class="w-full bg-black text-white font-bold py-3.5 rounded-lg flex items-center justify-center space-x-2 active:bg-gray-800">
+                    <button id="btn-anadir-carrito" onclick="agregarCompraAlCarrito(false)" type="button"
+                            class="w-full bg-[#9E472A] text-white font-bold py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:bg-[#863B22] active:scale-[0.99] transition-all">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Añadir al carrito</span>
                     </button>
-                    <button class="w-full border border-gray-300 bg-white text-gray-900 font-bold py-3.5 rounded-lg flex items-center justify-center active:bg-gray-50">
-                        Alquilar el libro
+
+                    <button id="btn-abrir-alquiler" onclick="togglePanelAlquiler()" type="button"
+                            class="w-full border border-gray-300 bg-white text-gray-900 font-bold py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:bg-gray-50 active:scale-[0.99] transition-all">
+                        <i class="fa-regular fa-clock text-sm"></i>
+                        <span>Alquilar el libro</span>
                     </button>
-                    <button class="w-full border border-gray-300 bg-white text-gray-900 font-bold py-3.5 rounded-lg flex items-center justify-center active:bg-gray-50">
+
+                    <!-- Panel desplegable para elegir duración y precio de alquiler -->
+                    <div id="panel-alquiler" class="hidden p-4 rounded-2xl bg-[#FAF5F2] border border-[#E5CFC3]">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-800">Elige duración del alquiler</span>
+                            <button onclick="togglePanelAlquiler()" type="button" class="text-gray-500 hover:text-gray-900 text-xs">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-3.5" id="opciones-duracion-alquiler">
+                            <!-- Se rellena dinámicamente con los 3 plazos y precios -->
+                        </div>
+
+                        <button onclick="confirmarAlquilerEnCarrito()" type="button"
+                                class="w-full bg-gray-900 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1.5 hover:bg-black transition-colors">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span id="btn-confirmar-alquiler-texto">Añadir alquiler al carrito · 4,50 €</span>
+                        </button>
+                    </div>
+
+                    <button onclick="agregarCompraAlCarrito(true)" type="button"
+                            class="w-full border border-gray-300 bg-white text-gray-900 font-bold py-3.5 rounded-xl flex items-center justify-center hover:bg-gray-50 active:scale-[0.99] transition-all">
                         Comprar ahora
                     </button>
                 </div>
@@ -98,6 +138,10 @@
             <div class="px-5 mb-8">
                 <h3 class="text-base font-bold text-gray-900 mb-4">Información del libro</h3>
                 <div class="flex flex-col text-sm">
+                    <div class="flex py-3 border-b border-gray-100">
+                        <span class="text-gray-500 w-1/3">Código</span>
+                        <span id="info-codigo" class="font-medium text-gray-900 w-2/3"></span>
+                    </div>
                     <div class="flex py-3 border-b border-gray-100">
                         <span class="text-gray-500 w-1/3">Autor</span>
                         <span id="info-autor" class="font-medium text-gray-900 w-2/3"></span>
@@ -126,13 +170,11 @@
             <div class="px-5 mb-6">
                 <h3 class="text-base font-bold text-gray-900 mb-4">Valoración y reseñas</h3>
                 
-                <!-- Caja de Datos de demostración -->
-                <div class="bg-gray-50 p-4 rounded-xl mb-6">
+                <div class="bg-[#FAF5F2] border border-[#EFE3DC] p-4 rounded-xl mb-6">
                     <h4 class="text-sm font-bold text-gray-900 mb-1">Datos de demostración</h4>
                     <p class="text-xs text-gray-600 leading-relaxed">La valoración y las reseñas son ejemplos ficticios, no opiniones reales ni verificadas.</p>
                 </div>
 
-                <!-- Cabecera de notas -->
                 <div class="flex items-center mb-6">
                     <div class="flex items-baseline mr-4">
                         <span id="nota-media" class="text-4xl font-bold text-gray-900 tracking-tight">4,3</span>
@@ -140,11 +182,10 @@
                     </div>
                     <div class="flex flex-col">
                         <span id="total-reseñas" class="text-sm font-bold text-gray-900">3 valoraciones de ejemplo</span>
-                        <span id="desglose-reseñas" class="text-xs text-gray-500 font-medium mt-0.5">1 de 5 <i class="fa-solid fa-star text-[10px]"></i> · 2 de 4 <i class="fa-solid fa-star text-[10px]"></i></span>
+                        <span id="desglose-reseñas" class="text-xs text-gray-500 font-medium mt-0.5"></span>
                     </div>
                 </div>
 
-                <!-- Botón Añadir reseña -->
                 <div class="border-t border-b border-gray-100 py-4 mb-6 flex justify-center">
                     <button class="text-sm font-bold text-gray-900 flex items-center space-x-2">
                         <span>Añadir reseña</span>
@@ -152,10 +193,7 @@
                     </button>
                 </div>
 
-                <!-- Lista de Reseñas -->
-                <div id="lista-reseñas" class="flex flex-col space-y-6">
-                    <!-- Se inyectarán con JS -->
-                </div>
+                <div id="lista-reseñas" class="flex flex-col space-y-6"></div>
             </div>
             
         </div>
@@ -178,179 +216,121 @@
 
     </div>
 
-    <!-- Script de lógica dinámica -->
     <script>
         const baseDatosLibros = {
             "juego_tronos": {
-                titulo: "Juego de Tronos",
-                autor: "George R. R. Martin",
-                precio: "16,50 €",
+                codigo: "BT-001", titulo: "Juego de Tronos", autor: "George R. R. Martin", precio: "16,50 €", precioNum: 16.50,
+                tarifasAlquiler: { 7: 2.95, 14: 4.50, 30: 7.50 },
                 portada: "img/juego_tronos.jpg",
-                valoracion_texto: "4,3 / 5 · 3 valoraciones de ejemplo",
-                nota: "4,3",
-                total_reseñas: "3 valoraciones de ejemplo",
+                valoracion_texto: "4,3 / 5 · 3 valoraciones de ejemplo", nota: "4,3", total_reseñas: "3 valoraciones de ejemplo",
                 desglose: "1 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 2 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "En Poniente, varias familias luchan por el poder mientras una amenaza crece más allá del Muro. Cuando Eddard Stark entra en la corte del rey, su sentido del honor choca con un mundo de secretos y alianzas frágiles. Cada decisión puede cambiar el destino de los Siete Reinos.",
-                original: "A Game of Thrones",
-                fecha: "1996",
-                saga: "Canción de hielo y fuego · Libro 1",
-                genero: "Fantasía épica",
+                original: "A Game of Thrones", fecha: "1996", saga: "Canción de hielo y fuego · Libro 1", genero: "Fantasía épica",
                 nota_pie: "1996 corresponde a la publicación original de la obra, no a la edición española.",
                 resenas: [
                     { usuario: "Lector A · Ejemplo", estrellas: 5, titulo: "Un mundo que atrapa", texto: "Las distintas voces hacen que cada capítulo abra una nueva perspectiva. Me gustó que nadie tenga todas las respuestas." },
-                    { usuario: "Lector B · Ejemplo", estrellas: 4, titulo: "Intriga y personajes con matices", texto: "El conflicto entre el honor y el poder es lo mejor. Al principio cuesta orientarse entre tantas familias, pero merece la pena." },
-                    { usuario: "Lector C · Ejemplo", estrellas: 4, titulo: "Para leer sin prisas", texto: "Disfruté las alianzas y las tensiones entre personajes. El arranque es pausado; después, las piezas empiezan a encajar." }
+                    { usuario: "Lector B · Ejemplo", estrellas: 4, titulo: "Intriga y personajes con matices", texto: "El conflicto entre el honor y el poder es lo mejor. Al principio cuesta orientarse entre tantas familias, pero merece la pena." }
                 ]
             },
             "choque_reyes": {
-                titulo: "Choque de reyes",
-                autor: "George R. R. Martin",
-                precio: "18,95 €",
+                codigo: "BT-002", titulo: "Choque de reyes", autor: "George R. R. Martin", precio: "18,95 €", precioNum: 18.95,
+                tarifasAlquiler: { 7: 3.20, 14: 4.90, 30: 8.20 },
                 portada: "img/choque_reyes.jpg",
-                valoracion_texto: "4,6 / 5 · 5 valoraciones de ejemplo",
-                nota: "4,6",
-                total_reseñas: "5 valoraciones de ejemplo",
+                valoracion_texto: "4,6 / 5 · 5 valoraciones de ejemplo", nota: "4,6", total_reseñas: "5 valoraciones de ejemplo",
                 desglose: "3 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 2 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "Un cometa rojo cruza el cielo como presagio de sangre y fuego. Cinco reyes reclaman el Trono de Hierro mientras la guerra civil devasta los Siete Reinos, Tyrion Lannister intenta mantener el orden en Desembarco del Rey y Daenerys Targaryen cruza el desierto con sus dragones.",
-                original: "A Clash of Kings",
-                fecha: "1998",
-                saga: "Canción de hielo y fuego · Libro 2",
-                genero: "Fantasía épica",
+                original: "A Clash of Kings", fecha: "1998", saga: "Canción de hielo y fuego · Libro 2", genero: "Fantasía épica",
                 nota_pie: "1998 corresponde a la publicación original de la obra, no a la edición española.",
                 resenas: [
-                    { usuario: "Lector D · Ejemplo", estrellas: 5, titulo: "La guerra total en Poniente", texto: "Los capítulos de Tyrion en Desembarco del Rey son pura estrategia política. Mejora todavía más respecto al primero." },
-                    { usuario: "Lector E · Ejemplo", estrellas: 4, titulo: "Gran continuación", texto: "La batalla del Aguasnegras es uno de los mejores momentos de toda la fantasía moderna." }
+                    { usuario: "Lector D · Ejemplo", estrellas: 5, titulo: "La guerra total en Poniente", texto: "Los capítulos de Tyrion en Desembarco del Rey son pura estrategia política. Mejora todavía más respecto al primero." }
                 ]
             },
             "tormenta_espadas": {
-                titulo: "Tormenta de espadas",
-                autor: "George R. R. Martin",
-                precio: "21,95 €",
+                codigo: "BT-003", titulo: "Tormenta de espadas", autor: "George R. R. Martin", precio: "21,95 €", precioNum: 21.95,
+                tarifasAlquiler: { 7: 3.50, 14: 5.50, 30: 9.00 },
                 portada: "img/tormenta_espadas.jpg",
-                valoracion_texto: "4,9 / 5 · 7 valoraciones de ejemplo",
-                nota: "4,9",
-                total_reseñas: "7 valoraciones de ejemplo",
+                valoracion_texto: "4,9 / 5 · 7 valoraciones de ejemplo", nota: "4,9", total_reseñas: "7 valoraciones de ejemplo",
                 desglose: "6 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 1 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "La Guerra de los Cinco Reyes alcanza su punto más crudo y despiadado. Mientras las traiciones sacuden los cimientos de las grandes casas en Poniente, Jon Nieve se infiltra entre los salvajes más allá del Muro y una amenaza helada avanza sin descanso hacia el sur.",
-                original: "A Storm of Swords",
-                fecha: "2000",
-                saga: "Canción de hielo y fuego · Libro 3",
-                genero: "Fantasía épica",
+                original: "A Storm of Swords", fecha: "2000", saga: "Canción de hielo y fuego · Libro 3", genero: "Fantasía épica",
                 nota_pie: "2000 corresponde a la publicación original de la obra, no a la edición española.",
                 resenas: [
-                    { usuario: "Lector F · Ejemplo", estrellas: 5, titulo: "Obra maestra absoluta", texto: "No da respiro en ningún momento. Los giros argumentales te dejan sin palabras." },
-                    { usuario: "Lector G · Ejemplo", estrellas: 5, titulo: "El mejor de la saga", texto: "Cada arco de personaje alcanza su clímax de forma brillante." }
+                    { usuario: "Lector F · Ejemplo", estrellas: 5, titulo: "Obra maestra absoluta", texto: "No da respiro en ningún momento. Los giros argumentales te dejan sin palabras." }
                 ]
             },
             "festin_cuervos": {
-                titulo: "Festín de cuervos",
-                autor: "George R. R. Martin",
-                precio: "19,95 €",
+                codigo: "BT-004", titulo: "Festín de cuervos", autor: "George R. R. Martin", precio: "19,95 €", precioNum: 19.95,
+                tarifasAlquiler: { 7: 3.30, 14: 5.00, 30: 8.50 },
                 portada: "img/festin_cuervos.jpg",
-                valoracion_texto: "4,2 / 5 · 4 valoraciones de ejemplo",
-                nota: "4,2",
-                total_reseñas: "4 valoraciones de ejemplo",
+                valoracion_texto: "4,2 / 5 · 4 valoraciones de ejemplo", nota: "4,2", total_reseñas: "4 valoraciones de ejemplo",
                 desglose: "1 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 3 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "Tras años de guerra encarnizada, los Siete Reinos yacen exhaustos y sembrados de ruinas. Mientras Cersei Lannister intenta aferrarse al poder en Desembarco del Rey, nuevas intrigas surgen en Dorne, las Islas del Hierro y Braavos.",
-                original: "A Feast for Crows",
-                fecha: "2005",
-                saga: "Canción de hielo y fuego · Libro 4",
-                genero: "Fantasía épica",
+                original: "A Feast for Crows", fecha: "2005", saga: "Canción de hielo y fuego · Libro 4", genero: "Fantasía épica",
                 nota_pie: "2005 corresponde a la publicación original de la obra, no a la edición española.",
                 resenas: [
                     { usuario: "Lector H · Ejemplo", estrellas: 4, titulo: "Más pausado pero muy rico", texto: "Profundiza muchísimo en las consecuencias reales de la guerra sobre la gente común." }
                 ]
             },
             "juegos_hambre": {
-                titulo: "Los juegos del Hambre",
-                autor: "Suzanne Collins",
-                precio: "13,80 €",
+                codigo: "BT-005", titulo: "Los juegos del Hambre", autor: "Suzanne Collins", precio: "13,80 €", precioNum: 13.80,
+                tarifasAlquiler: { 7: 2.50, 14: 3.95, 30: 6.50 },
                 portada: "img/juegos_hambre.jpg",
-                valoracion_texto: "4,8 / 5 · 12 valoraciones de ejemplo",
-                nota: "4,8",
-                total_reseñas: "12 valoraciones de ejemplo",
+                valoracion_texto: "4,8 / 5 · 12 valoraciones de ejemplo", nota: "4,8", total_reseñas: "12 valoraciones de ejemplo",
                 desglose: "8 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 4 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "En un futuro oscuro, Norteamérica se ha convertido en Panem. Cada año, el Capitolio obliga a sus doce distritos a enviar a dos adolescentes a competir en los Juegos del Hambre, un evento televisado donde solo uno puede sobrevivir.",
-                original: "The Hunger Games",
-                fecha: "2008",
-                saga: "Los Juegos del Hambre · Libro 1",
-                genero: "Distopía · Literatura juvenil",
+                original: "The Hunger Games", fecha: "2008", saga: "Los Juegos del Hambre · Libro 1", genero: "Distopía · Literatura juvenil",
                 nota_pie: "2008 corresponde a la publicación original en inglés.",
                 resenas: [
                     { usuario: "Lector 1 · Ejemplo", estrellas: 5, titulo: "No puedes parar de leer", texto: "El ritmo es frenético y Katniss es un personaje increíble." }
                 ]
             },
             "en_llamas": {
-                titulo: "En llamas",
-                autor: "Suzanne Collins",
-                precio: "14,50 €",
+                codigo: "BT-006", titulo: "En llamas", autor: "Suzanne Collins", precio: "14,50 €", precioNum: 14.50,
+                tarifasAlquiler: { 7: 2.60, 14: 4.10, 30: 6.80 },
                 portada: "img/en_llamas.jpg",
-                valoracion_texto: "4,7 / 5 · 9 valoraciones de ejemplo",
-                nota: "4,7",
-                total_reseñas: "9 valoraciones de ejemplo",
+                valoracion_texto: "4,7 / 5 · 9 valoraciones de ejemplo", nota: "4,7", total_reseñas: "9 valoraciones de ejemplo",
                 desglose: "6 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 3 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "Contra todo pronóstico, Katniss Everdeen y Peeta Mellark han sobrevivido a los Juegos del Hambre. Sin embargo, su desafío al Capitolio ha encendido la chispa de la rebelión en los distritos, y el presidente Snow prepara un Vasallaje de los Veinticinco diseñado para destruirlos.",
-                original: "Catching Fire",
-                fecha: "2009",
-                saga: "Los Juegos del Hambre · Libro 2",
-                genero: "Distopía · Literatura juvenil",
+                original: "Catching Fire", fecha: "2009", saga: "Los Juegos del Hambre · Libro 2", genero: "Distopía · Literatura juvenil",
                 nota_pie: "2009 corresponde a la publicación original en inglés.",
                 resenas: [
                     { usuario: "Lector 2 · Ejemplo", estrellas: 5, titulo: "Sube todavía más la tensión", texto: "La gira de la victoria y el giro del Vasallaje hacen que te enganches desde la primera página." }
                 ]
             },
             "nacidos_bruma": {
-                titulo: "Nacidos de la Bruma",
-                autor: "Brandon Sanderson",
-                precio: "12,00 €",
+                codigo: "BT-007", titulo: "Nacidos de la Bruma", autor: "Brandon Sanderson", precio: "16,00 €", precioNum: 16.00,
+                tarifasAlquiler: { 7: 2.90, 14: 4.50, 30: 7.40 },
                 portada: "img/nacidos_bruma.jpg",
-                valoracion_texto: "4,9 / 5 · 8 valoraciones de ejemplo",
-                nota: "4,9",
-                total_reseñas: "8 valoraciones de ejemplo",
+                valoracion_texto: "4,9 / 5 · 8 valoraciones de ejemplo", nota: "4,9", total_reseñas: "8 valoraciones de ejemplo",
                 desglose: "7 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 1 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "Durante mil años han caído las cenizas y nada florece. El Lord Legislador gobierna con un poder absoluto, gracias a la alomancia. Pero la esperanza sobrevive en una joven ladrona llamada Vin.",
-                original: "Mistborn: The Final Empire",
-                fecha: "2006",
-                saga: "Nacidos de la Bruma · Libro 1",
-                genero: "Fantasía épica · Fantasía moderna",
+                original: "Mistborn: The Final Empire", fecha: "2006", saga: "Nacidos de la Bruma · Libro 1", genero: "Fantasía épica · Fantasía moderna",
                 nota_pie: "2006 corresponde a la publicación original.",
                 resenas: [
                     { usuario: "Lector Fan · Ejemplo", estrellas: 5, titulo: "El mejor sistema de magia", texto: "La alomancia es brillante. El final te deja con la boca abierta." }
                 ]
             },
             "ciudad_hueso": {
-                titulo: "Ciudad de Hueso",
-                autor: "Cassandra Clare",
-                precio: "15,00 €",
+                codigo: "BT-008", titulo: "Ciudad de Hueso", autor: "Cassandra Clare", precio: "15,00 €", precioNum: 15.00,
+                tarifasAlquiler: { 7: 2.75, 14: 4.25, 30: 7.00 },
                 portada: "img/ciudad_hueso.jpg",
-                valoracion_texto: "4,5 / 5 · 6 valoraciones de ejemplo",
-                nota: "4,5",
-                total_reseñas: "6 valoraciones de ejemplo",
+                valoracion_texto: "4,5 / 5 · 6 valoraciones de ejemplo", nota: "4,5", total_reseñas: "6 valoraciones de ejemplo",
                 desglose: "3 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 3 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "En el club Pandemonium de Nueva York, Clary Fray presencia un asesinato cometido por tres jóvenes cubiertos de extraños tatuajes. Así descubre el mundo oculto de los Cazadores de Sombras, guerreros dedicados a proteger la Tierra de los demonios, justo antes de que su madre desaparezca.",
-                original: "City of Bones",
-                fecha: "2007",
-                saga: "Cazadores de Sombras · Libro 1",
-                genero: "Fantasía urbana · Literatura juvenil",
+                original: "City of Bones", fecha: "2007", saga: "Cazadores de Sombras · Libro 1", genero: "Fantasía urbana · Literatura juvenil",
                 nota_pie: "2007 corresponde a la publicación original en inglés.",
                 resenas: [
                     { usuario: "Lector Shadow · Ejemplo", estrellas: 5, titulo: "Muy entretenido y adictivo", texto: "La ambientación oscura de Nueva York y el humor de Jace enganchan muchísimo." }
                 ]
             },
             "ciudad_ceniza": {
-                titulo: "Ciudad de Ceniza",
-                autor: "Cassandra Clare",
-                precio: "16,00 €",
+                codigo: "BT-009", titulo: "Ciudad de Ceniza", autor: "Cassandra Clare", precio: "16,00 €", precioNum: 16.00,
+                tarifasAlquiler: { 7: 2.90, 14: 4.50, 30: 7.40 },
                 portada: "img/ciudad_ceniza.jpg",
-                valoracion_texto: "4,4 / 5 · 4 valoraciones de ejemplo",
-                nota: "4,4",
-                total_reseñas: "4 valoraciones de ejemplo",
+                valoracion_texto: "4,4 / 5 · 4 valoraciones de ejemplo", nota: "4,4", total_reseñas: "4 valoraciones de ejemplo",
                 desglose: "2 de 5 <i class='fa-solid fa-star text-[10px]'></i> · 2 de 4 <i class='fa-solid fa-star text-[10px]'></i>",
                 sinopsis: "Clary Fray solo desea recuperar su vida normal en Nueva York, pero el mundo subterráneo no se lo pondrá fácil. Mientras su madre permanece en coma, Valentine reúne los Instrumentos Mortales para desatar una guerra contra la Clave y poner a prueba los lazos entre Clary y Jace.",
-                original: "City of Ashes",
-                fecha: "2008",
-                saga: "Cazadores de Sombras · Libro 2",
-                genero: "Fantasía urbana · Literatura juvenil",
+                original: "City of Ashes", fecha: "2008", saga: "Cazadores de Sombras · Libro 2", genero: "Fantasía urbana · Literatura juvenil",
                 nota_pie: "2008 corresponde a la publicación original en inglés.",
                 resenas: [
                     { usuario: "Lector Runas · Ejemplo", estrellas: 4, titulo: "Expande genial el universo", texto: "Se conocen mucho mejor las facciones de los subterráneos y los conflictos familiares." }
@@ -361,15 +341,23 @@
         const params = new URLSearchParams(window.location.search);
         const libroId = params.get('id') || 'juego_tronos';
         const libro = baseDatosLibros[libroId];
+        let diasAlquilerSeleccionados = 14;
+
+        function formatearEuros(n) {
+            return n.toFixed(2).replace('.', ',') + ' €';
+        }
 
         if (libro) {
             document.getElementById('libro-portada').src = libro.portada;
             document.getElementById('libro-titulo').innerText = libro.titulo;
+            document.getElementById('libro-codigo-badge').innerText = libro.codigo;
             document.getElementById('libro-autor').innerText = libro.autor;
             document.getElementById('libro-precio').innerText = libro.precio;
+            document.getElementById('libro-precio-alquiler-desde').innerText = `Alquiler desde ${formatearEuros(libro.tarifasAlquiler[7])}`;
             document.getElementById('libro-valoracion').innerText = libro.valoracion_texto;
             
             document.getElementById('libro-sinopsis').innerText = libro.sinopsis;
+            document.getElementById('info-codigo').innerText = libro.codigo;
             document.getElementById('info-autor').innerText = libro.autor;
             document.getElementById('info-original').innerText = libro.original;
             document.getElementById('info-fecha').innerText = libro.fecha;
@@ -382,66 +370,175 @@
                 document.getElementById('info-nota').style.display = 'none';
             }
 
-            // Sección valoraciones
             document.getElementById('nota-media').innerText = libro.nota;
             document.getElementById('total-reseñas').innerText = libro.total_reseñas;
             document.getElementById('desglose-reseñas').innerHTML = libro.desglose;
 
             const contResenas = document.getElementById('lista-reseñas');
             contResenas.innerHTML = "";
-
             libro.resenas.forEach(res => {
                 let estrellasHTML = "";
-                for(let i=0; i<5; i++) {
-                    if(i < res.estrellas) {
-                        estrellasHTML += `<i class="fa-solid fa-star text-gray-900 text-[10px]"></i>`;
-                    } else {
-                        estrellasHTML += `<i class="fa-regular fa-star text-gray-400 text-[10px]"></i>`;
-                    }
+                for (let i = 0; i < 5; i++) {
+                    estrellasHTML += (i < res.estrellas)
+                        ? `<i class="fa-solid fa-star text-gray-900 text-[10px]"></i>`
+                        : `<i class="fa-regular fa-star text-gray-400 text-[10px]"></i>`;
                 }
-
                 contResenas.innerHTML += `
                     <div class="flex flex-col">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs text-gray-500">${res.usuario}</span>
-                            <div class="flex space-x-0.5">
-                                ${estrellasHTML}
-                            </div>
+                            <div class="flex space-x-0.5">${estrellasHTML}</div>
                         </div>
                         <h5 class="text-sm font-bold text-gray-900 mb-1">${res.titulo}</h5>
                         <p class="text-sm text-gray-600 leading-relaxed">${res.texto}</p>
                     </div>
                 `;
             });
+
+            renderizarOpcionesAlquiler();
         }
 
-        // Sincronizar historial y estado inicial del corazón
+        // --- LÓGICA DEL SELECTOR DE ALQUILER (PLAZO Y PRECIO) ---
+        function togglePanelAlquiler() {
+            const panel = document.getElementById('panel-alquiler');
+            panel.classList.toggle('hidden');
+            renderizarOpcionesAlquiler();
+        }
+
+        function seleccionarDuracionAlquiler(dias) {
+            diasAlquilerSeleccionados = dias;
+            renderizarOpcionesAlquiler();
+        }
+
+        function renderizarOpcionesAlquiler() {
+            if (!libro) return;
+            const contenedor = document.getElementById('opciones-duracion-alquiler');
+            const plazos = [
+                { dias: 7, etiqueta: "7 días" },
+                { dias: 14, etiqueta: "14 días" },
+                { dias: 30, etiqueta: "30 días" }
+            ];
+
+            contenedor.innerHTML = plazos.map(p => {
+                const activo = (diasAlquilerSeleccionados === p.dias);
+                const clase = activo
+                    ? "border-2 border-[#9E472A] bg-white text-gray-900 shadow-sm"
+                    : "border border-gray-200 bg-white/70 text-gray-600 hover:bg-white";
+                return `
+                    <button type="button" onclick="seleccionarDuracionAlquiler(${p.dias})" class="p-2.5 rounded-xl text-center transition-all ${clase}">
+                        <p class="text-xs font-bold">${p.etiqueta}</p>
+                        <p class="text-xs font-bold text-[#9E472A] mt-0.5">${formatearEuros(libro.tarifasAlquiler[p.dias])}</p>
+                    </button>
+                `;
+            }).join('');
+
+            const precioSel = libro.tarifasAlquiler[diasAlquilerSeleccionados];
+            document.getElementById('btn-confirmar-alquiler-texto').innerText =
+                `Añadir alquiler (${diasAlquilerSeleccionados} días) · ${formatearEuros(precioSel)}`;
+        }
+
+        function confirmarAlquilerEnCarrito() {
+            if (!libro) return;
+            const precioAlquiler = libro.tarifasAlquiler[diasAlquilerSeleccionados];
+            const carrito = JSON.parse(localStorage.getItem('bibliotrack_carrito') || '[]');
+
+            // Si ya estaba alquilado este libro, actualizamos plazo y precio
+            const idx = carrito.findIndex(item => item.id === libroId && item.tipo === 'alquiler');
+            if (idx !== -1) {
+                carrito[idx].dias = diasAlquilerSeleccionados;
+                carrito[idx].precioAlquiler = precioAlquiler;
+            } else {
+                carrito.push({
+                    id: libroId,
+                    tipo: 'alquiler',
+                    dias: diasAlquilerSeleccionados,
+                    precioAlquiler: precioAlquiler,
+                    cantidad: 1
+                });
+            }
+
+            localStorage.setItem('bibliotrack_carrito', JSON.stringify(carrito));
+            document.getElementById('panel-alquiler').classList.add('hidden');
+
+            // Feedback visual inmediato en la propia pantalla sin redirigir
+            mostrarAvisoAnadido(`Alquiler (${diasAlquilerSeleccionados} días · ${formatearEuros(precioAlquiler)}) añadido al carrito`);
+            const btnAlquiler = document.getElementById('btn-abrir-alquiler');
+            btnAlquiler.innerHTML = `<i class="fa-solid fa-check text-emerald-700"></i><span class="text-emerald-800">Alquiler añadido (${diasAlquilerSeleccionados} días)</span>`;
+            setTimeout(() => {
+                btnAlquiler.innerHTML = `<i class="fa-regular fa-clock text-sm"></i><span>Alquilar el libro</span>`;
+            }, 2200);
+        }
+
+        function agregarCompraAlCarrito(irDirectoAlCarrito) {
+            const carrito = JSON.parse(localStorage.getItem('bibliotrack_carrito') || '[]');
+            const existente = carrito.find(item => item.id === libroId && item.tipo === 'compra');
+            if (existente) {
+                existente.cantidad += 1;
+            } else {
+                carrito.push({ id: libroId, tipo: 'compra', cantidad: 1 });
+            }
+            localStorage.setItem('bibliotrack_carrito', JSON.stringify(carrito));
+
+            if (irDirectoAlCarrito) {
+                window.location.href = 'carrito.html';
+                return;
+            }
+
+            mostrarAvisoAnadido(`"${libro.titulo}" añadido al carrito`);
+            const btn = document.getElementById('btn-anadir-carrito');
+            btn.innerHTML = `<i class="fa-solid fa-check"></i><span>Añadido al carrito</span>`;
+            btn.classList.replace('bg-[#9E472A]', 'bg-emerald-700');
+            setTimeout(() => {
+                btn.innerHTML = `<i class="fa-solid fa-cart-shopping"></i><span>Añadir al carrito</span>`;
+                btn.classList.replace('bg-emerald-700', 'bg-[#9E472A]');
+            }, 1800);
+        }
+
+        function mostrarAvisoAnadido(mensaje) {
+            const aviso = document.getElementById('aviso-anadido');
+            document.getElementById('texto-aviso-anadido').innerText = mensaje;
+            aviso.classList.remove('hidden');
+            actualizarBadgeCarrito();
+        }
+
+        function actualizarBadgeCarrito() {
+            const carrito = JSON.parse(localStorage.getItem('bibliotrack_carrito') || '[]');
+            const subastas = JSON.parse(localStorage.getItem('bibliotrack_subastas_ganadas') || '["juego_tronos_col","juegos_hambre_esp"]');
+            const total = carrito.reduce((acc, i) => acc + i.cantidad, 0) + subastas.length;
+            const badge = document.getElementById('badge-carrito-header');
+            if (total > 0) {
+                badge.innerText = total;
+                badge.classList.remove('hidden');
+            }
+        }
+
+        // Sincronizar historial y favoritos
         (function sincronizarLibro() {
             let favs = JSON.parse(localStorage.getItem('bibliotrack_favoritos') || '["juego_tronos","nacidos_bruma"]');
             const icono = document.getElementById('icono-favorito');
             if (favs.includes(libroId)) {
                 icono.classList.remove('fa-regular');
-                icono.classList.add('fa-solid');
+                icono.classList.add('fa-solid', 'text-[#9E472A]');
             }
 
             let historial = JSON.parse(localStorage.getItem('bibliotrack_historial') || '[]');
             historial = historial.filter(item => item.id !== libroId);
             historial.unshift({ id: libroId, fecha: 'Visto ahora' });
             localStorage.setItem('bibliotrack_historial', JSON.stringify(historial.slice(0, 10)));
+            actualizarBadgeCarrito();
         })();
 
-        // Función para alternar y guardar favorito
         function toggleFavorito() {
             const icono = document.getElementById('icono-favorito');
             let favs = JSON.parse(localStorage.getItem('bibliotrack_favoritos') || '[]');
 
             if (icono.classList.contains('fa-regular')) {
                 icono.classList.remove('fa-regular');
-                icono.classList.add('fa-solid', 'scale-110');
+                icono.classList.add('fa-solid', 'text-[#9E472A]', 'scale-110');
                 setTimeout(() => icono.classList.remove('scale-110'), 200);
                 if (!favs.includes(libroId)) favs.push(libroId);
             } else {
-                icono.classList.remove('fa-solid');
+                icono.classList.remove('fa-solid', 'text-[#9E472A]');
                 icono.classList.add('fa-regular');
                 favs = favs.filter(id => id !== libroId);
             }

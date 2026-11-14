@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTrack - Escanear libro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .mobile-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <script src="accesibilidad.js"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Contenedor del Móvil -->
+    <div class="mobile-container bg-white shadow-2xl relative flex flex-col sm:rounded-[2.5rem] sm:h-[800px] sm:border-[8px] sm:border-gray-900 overflow-hidden">
+        
+        <!-- ======================================================== -->
+        <!-- VISTA 1: ESCANEAR LIBRO (SEGÚN PROTOTIPO)                -->
+        <!-- ======================================================== -->
+        <div id="vista-escaner-principal" class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Header -->
+            <div class="bg-white pt-5 pb-3 px-4 z-10 sticky top-0 border-b border-gray-100">
+                <div class="flex justify-between items-center mb-3 text-sm font-bold">
+                    <span>9:41</span>
+                    <div class="flex space-x-2 items-center">
+                        <i class="fa-solid fa-signal text-xs"></i>
+                        <i class="fa-solid fa-wifi text-xs"></i>
+                        <i class="fa-solid fa-battery-full text-lg"></i>
+                    </div>
+                </div>
+
+                <a href="inicio.html" class="inline-flex items-center space-x-1 text-xs font-semibold text-[#9E472A] mb-1">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span>Inicio</span>
+                </a>
+                <span class="block text-xs font-medium text-gray-500">BiblioTrack</span>
+                <h1 class="text-2xl font-bold text-gray-900 leading-tight">Escanear libro</h1>
+            </div>
+
+            <!-- Contenido Scrolleable -->
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-4">
+                
+                <!-- Banner informativo superior -->
+                <div class="p-4 rounded-2xl bg-[#FAF5F2] border border-[#EFE3DC] mb-5">
+                    <h2 class="text-sm font-bold text-gray-900 mb-1">Encuentra un libro en segundos.</h2>
+                    <p class="text-xs text-gray-600 leading-relaxed mb-1.5">
+                        Usa NFC o QR para ir directamente a su página, ver reseñas, precios y subastas relacionadas.
+                    </p>
+                    <p class="text-[11px] font-semibold text-[#9E472A]">
+                        Compatible con etiquetas NFC (iOS y Android) y códigos QR del libro.
+                    </p>
+                </div>
+
+                <!-- Selección de método: NFC vs QR -->
+                <h3 class="text-sm font-bold text-gray-900">Escanea el libro</h3>
+                <p class="text-xs text-gray-500 mb-3">Elige cómo quieres identificar el ejemplar.</p>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button id="card-modo-nfc" onclick="seleccionarModoEscaneo('nfc')" type="button"
+                            class="p-3.5 rounded-2xl border-2 border-[#9E472A] bg-white text-left transition-all">
+                        <div class="w-10 h-10 rounded-full bg-[#FAF5F2] text-[#9E472A] flex items-center justify-center mb-2.5">
+                            <i class="fa-solid fa-wifi rotate-90"></i>
+                        </div>
+                        <p class="text-sm font-bold text-gray-900">NFC</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5 leading-snug">Acércalo a la etiqueta del libro.</p>
+                    </button>
+
+                    <button id="card-modo-qr" onclick="seleccionarModoEscaneo('qr')" type="button"
+                            class="p-3.5 rounded-2xl border border-gray-200 bg-white text-left transition-all">
+                        <div class="w-10 h-10 rounded-full bg-[#FAF5F2] text-[#9E472A] flex items-center justify-center mb-2.5">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <p class="text-sm font-bold text-gray-900">QR</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5 leading-snug">Escanea el código del libro.</p>
+                    </button>
+                </div>
+
+                <!-- Botón Principal de Acción -->
+                <button id="btn-accion-escaner" onclick="ejecutarAccionPrincipalEscaner()" type="button"
+                        class="w-full bg-[#9E472A] text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center space-x-2 hover:bg-[#863B22] active:scale-[0.99] transition-all mb-3">
+                    <i class="fa-solid fa-wifi rotate-90"></i>
+                    <span>Activar sensor NFC</span>
+                </button>
+
+                <!-- Estado / Visor dinámico NFC o Cámara QR -->
+                <div id="panel-sensor-activo" class="hidden mb-4 p-3.5 rounded-2xl bg-[#FAF5F2] border border-[#E5CFC3] text-center">
+                    <p id="texto-estado-sensor" class="text-xs font-bold text-gray-900 mb-1">Esperando etiqueta NFC...</p>
+                    <p id="subtexto-estado-sensor" class="text-[11px] text-gray-600 mb-3">Acerca la parte trasera del móvil al ejemplar.</p>
+                    <video id="video-camara-qr" autoplay playsinline muted class="hidden w-full h-44 object-cover rounded-xl mb-3 bg-black"></video>
+                    <!-- Botón de demostración para simular detección en PC -->
+                    <button onclick="completarEscaneoExitoso('juego_tronos', 'NFC')" type="button"
+                            class="px-3.5 py-1.5 bg-white border border-gray-300 rounded-lg text-[11px] font-bold text-gray-800 hover:bg-gray-50">
+                        Simular detección ahora (BT-001)
+                    </button>
+                </div>
+
+                <!-- Bloque: ¿No tienes NFC o QR? -->
+                <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200 mb-5">
+                    <h4 class="text-xs font-bold text-gray-900 mb-1">¿No tienes NFC o QR?</h4>
+                    <p class="text-[11px] text-gray-500 leading-relaxed mb-3">
+                        También puedes buscar por título, autor o código para ir a la página del libro.
+                    </p>
+                    <button id="btn-mostrar-manual" onclick="toggleBusquedaManual()" type="button"
+                            class="w-full py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-900 hover:bg-gray-50">
+                        Buscar manualmente
+                    </button>
+
+                    <form id="form-busqueda-manual" onsubmit="buscarManualmente(event)" class="hidden mt-3 flex space-x-2">
+                        <input id="input-busqueda-manual" type="text" placeholder="Ej: BT-001, Juego de Tronos..."
+                               class="flex-1 bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                        <button type="submit" class="px-3.5 py-2 bg-[#9E472A] text-white text-xs font-bold rounded-xl">
+                            Ir
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Consejos para escanear -->
+                <h3 class="text-sm font-bold text-gray-900 mb-2.5">Consejos para escanear</h3>
+                <div class="flex flex-col space-y-2.5">
+                    <div class="p-3.5 rounded-2xl border border-gray-200 bg-white flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FAF5F2] text-[#9E472A] flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-circle-dot text-xs"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-900">Usa NFC para etiquetas integradas</h4>
+                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                                En iPhone basta con acercar la parte superior con la pantalla encendida; en Android pulsa Activar sensor NFC o acércalo directamente.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl border border-gray-200 bg-white flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FAF5F2] text-[#9E472A] flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-expand text-xs"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-900">QR en portada, solapa o contraportada</h4>
+                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                                Si el libro tiene un código QR impreso, apunta la cámara para que el código quede centrado y nítido.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VISTA 2: ESCANEO EXITOSO (RETO 3: FEEDBACK MULTIMODAL)   -->
+        <!-- ======================================================== -->
+        <div id="vista-escaneo-exitoso" class="hidden flex-1 flex flex-col overflow-hidden">
+            <div class="bg-white pt-5 pb-3 px-4 border-b border-gray-100">
+                <div class="flex justify-between items-center mb-3 text-sm font-bold">
+                    <span>9:41</span>
+                    <div class="flex space-x-2 items-center">
+                        <i class="fa-solid fa-signal text-xs"></i>
+                        <i class="fa-solid fa-wifi text-xs"></i>
+                        <i class="fa-solid fa-battery-full text-lg"></i>
+                    </div>
+                </div>
+                <div class="text-center py-1">
+                    <span class="text-base font-bold text-gray-900">BiblioTrack</span>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center px-6 pb-24 text-center">
+                <div class="w-16 h-16 rounded-full bg-[#9E472A] text-white flex items-center justify-center text-2xl mb-4 shadow-md">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Escaneo exitoso</h2>
+                <p class="text-xs text-gray-500 max-w-[260px] leading-relaxed mb-5">
+                    El libro se ha identificado correctamente tras leer su código QR o etiqueta NFC.
+                </p>
+
+                <!-- Tarjeta del libro identificado -->
+                <div id="tarjeta-libro-identificado" class="w-full p-3.5 rounded-2xl bg-[#FAF5F2] border border-[#EFE3DC] flex items-center space-x-3 text-left mb-6">
+                </div>
+
+                <a id="enlace-ver-pagina-libro" href="libro.html?id=juego_tronos"
+                   class="w-full bg-[#9E472A] text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center hover:bg-[#863B22] transition-colors mb-2.5">
+                    Ver página del libro
+                </a>
+
+                <button onclick="reiniciarEscaner()" type="button"
+                        class="w-full border border-gray-300 bg-white text-[#9E472A] font-bold py-3.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+                    Escanear otro libro
+                </button>
+            </div>
+        </div>
+
+        <!-- Barra de Navegación Inferior -->
+        <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex flex-col z-20">
+            <div class="flex justify-between items-center px-6 py-3">
+                <a href="inicio.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="subastas.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-gavel"></i>
+                </a>
+                <a href="escaner.html" class="text-black text-3xl flex flex-col items-center">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M4 4h4v2H6v2H4V4zm16 0h-4v2h2v2h2V4zM4 20h4v-2H6v-2H4v4zm16 0h-4v-2h2v-2h2v4zM7 7h10v10H7V7zm2 2v6h6V9H9z"/>
+                    </svg>
+                </a>
+                <a href="carrito.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+                <a href="perfil.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-regular fa-user"></i>
+                </a>
+            </div>
+            <div class="w-full flex justify-center pb-2 pt-1">
+                <div class="w-32 h-1 bg-black rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const catalogoLibros = [
+            { id: "juego_tronos", codigo: "BT-001", titulo: "Juego de Tronos", autor: "George R. R. Martin", precio: "16,50 €", portada: "img/juego_tronos.jpg" },
+            { id: "choque_reyes", codigo: "BT-002", titulo: "Choque de reyes", autor: "George R. R. Martin", precio: "18,95 €", portada: "img/choque_reyes.jpg" },
+            { id: "tormenta_espadas", codigo: "BT-003", titulo: "Tormenta de espadas", autor: "George R. R. Martin", precio: "21,95 €", portada: "img/tormenta_espadas.jpg" },
+            { id: "festin_cuervos", codigo: "BT-004", titulo: "Festín de cuervos", autor: "George R. R. Martin", precio: "19,95 €", portada: "img/festin_cuervos.jpg" },
+            { id: "juegos_hambre", codigo: "BT-005", titulo: "Los juegos del Hambre", autor: "Suzanne Collins", precio: "13,80 €", portada: "img/juegos_hambre.jpg" },
+            { id: "en_llamas", codigo: "BT-006", titulo: "En llamas", autor: "Suzanne Collins", precio: "14,50 €", portada: "img/en_llamas.jpg" },
+            { id: "nacidos_bruma", codigo: "BT-007", titulo: "Nacidos de la Bruma", autor: "Brandon Sanderson", precio: "16,00 €", portada: "img/nacidos_bruma.jpg" },
+            { id: "ciudad_hueso", codigo: "BT-008", titulo: "Ciudad de Hueso", autor: "Cassandra Clare", precio: "15,00 €", portada: "img/ciudad_hueso.jpg" },
+            { id: "ciudad_ceniza", codigo: "BT-009", titulo: "Ciudad de Ceniza", autor: "Cassandra Clare", precio: "16,00 €", portada: "img/ciudad_ceniza.jpg" }
+        ];
+
+        let modoActual = 'nfc';
+        let streamCamara = null;
+        let intervaloQr = null;
+        let abortNfc = null;
+
+        function buscarLibroPorTexto(texto) {
+            const limpio = (texto || "").trim().toLowerCase();
+            if (!limpio) return null;
+            return catalogoLibros.find(l =>
+                limpio.includes(l.id) ||
+                limpio.includes(l.codigo.toLowerCase()) ||
+                limpio.includes(l.titulo.toLowerCase())
+            ) || null;
+        }
+
+        // --- RETO 3: FEEDBACK MULTIMODAL (SONORO + HÁPTICO) ---
+        function emitirFeedbackMultimodal() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([110, 50, 160]);
+            }
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const notas = [587.33, 880];
+                    notas.forEach((frec, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(frec, ctx.currentTime + i * 0.11);
+                        gain.gain.setValueAtTime(0.14, ctx.currentTime + i * 0.11);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.18);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + i * 0.11);
+                        osc.stop(ctx.currentTime + i * 0.11 + 0.19);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function seleccionarModoEscaneo(modo) {
+            modoActual = modo;
+            detenerRecursosActivos();
+
+            const cardNfc = document.getElementById('card-modo-nfc');
+            const cardQr = document.getElementById('card-modo-qr');
+            const btnPrincipal = document.getElementById('btn-accion-escaner');
+
+            if (modo === 'nfc') {
+                cardNfc.className = "p-3.5 rounded-2xl border-2 border-[#9E472A] bg-white text-left transition-all";
+                cardQr.className = "p-3.5 rounded-2xl border border-gray-200 bg-white text-left transition-all";
+                btnPrincipal.innerHTML = `<i class="fa-solid fa-wifi rotate-90"></i><span>Activar sensor NFC</span>`;
+            } else {
+                cardQr.className = "p-3.5 rounded-2xl border-2 border-[#9E472A] bg-white text-left transition-all";
+                cardNfc.className = "p-3.5 rounded-2xl border border-gray-200 bg-white text-left transition-all";
+                btnPrincipal.innerHTML = `<i class="fa-solid fa-camera"></i><span>Abrir cámara QR</span>`;
+            }
+        }
+
+        async function ejecutarAccionPrincipalEscaner() {
+            const panelSensor = document.getElementById('panel-sensor-activo');
+            const textoEstado = document.getElementById('texto-estado-sensor');
+            const subtextoEstado = document.getElementById('subtexto-estado-sensor');
+            const video = document.getElementById('video-camara-qr');
+
+            panelSensor.classList.remove('hidden');
+
+            if (modoActual === 'nfc') {
+                video.classList.add('hidden');
+                if ('NDEFReader' in window) {
+                    try {
+                        abortNfc = new AbortController();
+                        const ndef = new NDEFReader();
+                        await ndef.scan({ signal: abortNfc.signal });
+                        textoEstado.innerText = "Sensor NFC activo · Escuchando...";
+                        subtextoEstado.innerText = "Acerca la etiqueta NFC del libro a la parte trasera del teléfono.";
+
+                        ndef.onreading = ({ message }) => {
+                            let texto = "";
+                            const decoder = new TextDecoder();
+                            for (const rec of message.records) {
+                                if (rec.recordType === "text" || rec.recordType === "url") {
+                                    texto = decoder.decode(rec.data);
+                                    break;
+                                }
+                            }
+                            const encontrado = buscarLibroPorTexto(texto) || catalogoLibros[0];
+                            completarEscaneoExitoso(encontrado.id, 'NFC');
+                        };
+                    } catch (err) {
+                        textoEstado.innerText = "No se pudo activar el chip NFC";
+                        subtextoEstado.innerText = err.message;
+                    }
+                } else {
+                    textoEstado.innerText = "En iPhone acerca la etiqueta NFC directamente";
+                    subtextoEstado.innerText = "iOS detecta etiquetas NFC con URL en segundo plano. En Android Chrome activa el lector aquí.";
+                }
+            } else {
+                textoEstado.innerText = "Apunta al código QR del libro";
+                subtextoEstado.innerText = "Centra el código impreso en la portada o contraportada.";
+                try {
+                    streamCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    video.srcObject = streamCamara;
+                    video.classList.remove('hidden');
+
+                    // Detección automática de códigos QR si el navegador soporta BarcodeDetector
+                    if ('BarcodeDetector' in window) {
+                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        intervaloQr = setInterval(async () => {
+                            if (!streamCamara || video.readyState < 2) return;
+                            try {
+                                const codigos = await detector.detect(video);
+                                if (codigos.length > 0) {
+                                    const encontrado = buscarLibroPorTexto(codigos[0].rawValue) || catalogoLibros[0];
+                                    completarEscaneoExitoso(encontrado.id, 'Código QR');
+                                }
+                            } catch (e) {}
+                        }, 400);
+                    }
+                } catch (e) {
+                    video.classList.add('hidden');
+                    subtextoEstado.innerText = "Cámara no disponible en este equipo. Usa el botón de simulación o búsqueda manual.";
+                }
+            }
+        }
+
+        function toggleBusquedaManual() {
+            const form = document.getElementById('form-busqueda-manual');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('input-busqueda-manual').focus();
+            }
+        }
+
+        function buscarManualmente(e) {
+            e.preventDefault();
+            const q = document.getElementById('input-busqueda-manual').value.trim().toLowerCase();
+            if (!q) return;
+            const libro = catalogoLibros.find(l =>
+                l.codigo.toLowerCase() === q || l.id.includes(q) || l.titulo.toLowerCase().includes(q) || l.autor.toLowerCase().includes(q)
+            );
+            if (libro) {
+                completarEscaneoExitoso(libro.id, 'Búsqueda manual');
+            } else {
+                alert("No se encontró ese libro. Prueba con BT-001 a BT-009 o un título del catálogo.");
+            }
+        }
+
+        function completarEscaneoExitoso(libroId, origen) {
+            detenerRecursosActivos();
+            emitirFeedbackMultimodal();
+
+            const libro = catalogoLibros.find(l => l.id === libroId) || catalogoLibros[0];
+
+            document.getElementById('tarjeta-libro-identificado').innerHTML = `
+                <img src="${libro.portada}" class="w-12 h-18 object-cover rounded shadow-sm flex-shrink-0" alt="${libro.titulo}">
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#9E472A]">${libro.codigo} · ${origen}</span>
+                    <h3 class="text-sm font-bold text-gray-900 truncate">${libro.titulo}</h3>
+                    <p class="text-xs text-gray-500 truncate">${libro.autor}</p>
+                    <p class="text-xs font-bold text-gray-900 mt-0.5">${libro.precio}</p>
+                </div>
+            `;
+
+            document.getElementById('enlace-ver-pagina-libro').href = `libro.html?id=${libro.id}`;
+
+            document.getElementById('vista-escaner-principal').classList.add('hidden');
+            document.getElementById('vista-escaneo-exitoso').classList.remove('hidden');
+        }
+
+        function reiniciarEscaner() {
+            document.getElementById('vista-escaneo-exitoso').classList.add('hidden');
+            document.getElementById('vista-escaner-principal').classList.remove('hidden');
+        }
+
+        function detenerRecursosActivos() {
+            if (abortNfc) {
+                abortNfc.abort();
+                abortNfc = null;
+            }
+            if (intervaloQr) {
+                clearInterval(intervaloQr);
+                intervaloQr = null;
+            }
+            if (streamCamara) {
+                streamCamara.getTracks().forEach(t => t.stop());
+                streamCamara = null;
+            }
+            document.getElementById('panel-sensor-activo').classList.add('hidden');
+            document.getElementById('video-camara-qr').classList.add('hidden');
+        }
+
+        // Detección automática al abrir desde etiqueta NFC con URL (ej. escaner.html?nfc=juego_tronos)
+        const tagUrl = new URLSearchParams(window.location.search).get('nfc');
+        if (tagUrl) {
+            const libroDetectado = buscarLibroPorTexto(tagUrl) || catalogoLibros[0];
+            window.history.replaceState(null, '', 'escaner.html');
+            completarEscaneoExitoso(libroDetectado.id, 'Etiqueta NFC');
+        }
+    </script>
+
+</body>
+</html>
