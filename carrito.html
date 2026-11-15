@@ -420,8 +420,9 @@
                 document.getElementById('conteo-subastas-texto').innerText =
                     idsSubastas.length + (idsSubastas.length === 1 ? ' libro' : ' libros');
 
+                const detalleGanadasExtra = JSON.parse(localStorage.getItem('bibliotrack_subastas_ganadas_detalle') || '{}');
                 listaSubastas.innerHTML = idsSubastas.map(sid => {
-                    const sub = baseSubastasGanadas[sid];
+                    const sub = detalleGanadasExtra[sid] || baseSubastasGanadas[sid];
                     if (!sub) return '';
                     subtotalLibrosSubastas += sub.precio;
 

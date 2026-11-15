@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTrack - Subastas de libros</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .mobile-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <script src="accesibilidad.js"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Contenedor del Móvil -->
+    <div class="mobile-container bg-white shadow-2xl relative flex flex-col sm:rounded-[2.5rem] sm:h-[800px] sm:border-[8px] sm:border-gray-900 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-white pt-5 pb-3 px-4 z-10 sticky top-0 border-b border-gray-100">
+            <!-- Barra de estado -->
+            <div class="flex justify-between items-center mb-3 text-sm font-bold">
+                <span>9:41</span>
+                <div class="flex space-x-2 items-center">
+                    <i class="fa-solid fa-signal text-xs"></i>
+                    <i class="fa-solid fa-wifi text-xs"></i>
+                    <i class="fa-solid fa-battery-full text-lg"></i>
+                </div>
+            </div>
+
+            <!-- Título y Badge EN VIVO -->
+            <div class="flex items-end justify-between mb-3">
+                <div>
+                    <span class="block text-xs font-medium text-gray-500">BiblioTrack</span>
+                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">Subastas de libros</h1>
+                </div>
+                <span class="inline-flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-[#9E472A] bg-[#FAF5F2] border border-[#E5CFC3] px-2.5 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#9E472A]"></span>
+                    <span>EN VIVO</span>
+                </span>
+            </div>
+
+            <!-- Buscador -->
+            <div class="relative mb-2.5">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <input id="input-buscar-subastas" oninput="renderizarSubastas()" type="text"
+                       placeholder="Buscar título, autor o edición"
+                       class="w-full bg-gray-100 text-gray-900 rounded-xl pl-9 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                <button id="btn-limpiar-busqueda" onclick="limpiarBusqueda()" type="button" aria-label="Limpiar búsqueda"
+                        class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Píldoras de filtro rápido: Favoritos | Mis pujas | Filtros -->
+            <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar">
+                <button id="pill-favoritos" onclick="toggleFiltroPill('favoritos')" type="button"
+                        class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-800 flex items-center space-x-1.5 flex-shrink-0 transition-colors">
+                    <i class="fa-regular fa-heart text-[11px]"></i>
+                    <span>Favoritos</span>
+                </button>
+
+                <button id="pill-mis-pujas" onclick="toggleFiltroPill('mis_pujas')" type="button"
+                        class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-800 flex items-center space-x-1.5 flex-shrink-0 transition-colors">
+                    <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
+                    <span>Mis pujas</span>
+                    <span id="contador-mis-pujas" class="hidden text-[10px] font-bold bg-[#9E472A] text-white px-1.5 rounded-full">0</span>
+                </button>
+
+                <button id="pill-filtros" onclick="togglePanelFiltros()" type="button"
+                        class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-800 flex items-center space-x-1.5 flex-shrink-0 transition-colors">
+                    <i class="fa-solid fa-sliders text-[11px]"></i>
+                    <span>Filtros</span>
+                </button>
+            </div>
+
+            <!-- Panel desplegable de ordenación / filtros extra -->
+            <div id="panel-filtros-extra" class="hidden mt-2.5 p-2.5 rounded-xl bg-[#FAF5F2] border border-[#EFE3DC] flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold text-gray-700">Ordenar por:</span>
+                <select id="select-orden-subastas" onchange="renderizarSubastas()"
+                        class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-900 focus:outline-none">
+                    <option value="relevancia">Destacadas</option>
+                    <option value="precio_asc">Menor puja actual</option>
+                    <option value="tiempo_asc">Cierre más próximo</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Contenido Central (Scrolleable) -->
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-3.5">
+            
+            <!-- Banner de Feedback Visual tras pujar o ganar subasta -->
+            <div id="banner-feedback-subasta" class="hidden mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-xs">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-start space-x-2.5">
+                        <i id="icono-feedback-subasta" class="fa-solid fa-circle-check text-emerald-700 text-base mt-0.5"></i>
+                        <div>
+                            <p id="titulo-feedback-subasta" class="text-xs font-bold text-emerald-950">¡Puja confirmada!</p>
+                            <p id="subtitulo-feedback-subasta" class="text-[11px] text-emerald-800 mt-0.5 leading-snug"></p>
+                        </div>
+                    </div>
+                    <button onclick="cerrarBannerFeedback()" type="button" aria-label="Cerrar aviso" class="text-emerald-700 hover:text-emerald-950 text-xs p-0.5">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div id="acciones-feedback-subasta" class="mt-2.5 pt-2 border-t border-emerald-200/80 flex items-center justify-between">
+                    <!-- Se rellena dinámicamente con el botón de simular victoria o ir al carrito -->
+                </div>
+            </div>
+
+            <!-- Banner: Dale otra vida a tu libro -->
+            <div class="p-3.5 rounded-2xl bg-[#FAF5F2] border border-[#EFE3DC] flex items-center justify-between gap-3 mb-5">
+                <div class="min-w-0">
+                    <h2 class="text-sm font-bold text-gray-900 leading-tight">Dale otra vida a tu libro</h2>
+                    <p class="text-[11px] text-gray-600 mt-0.5 leading-snug">De tu estantería a su próxima historia.</p>
+                </div>
+                <button onclick="abrirModalVender()" type="button"
+                        class="px-3.5 py-2 bg-[#9E472A] text-white text-xs font-bold rounded-xl hover:bg-[#863B22] active:scale-95 transition-all flex-shrink-0">
+                    Vender libro
+                </button>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SECCIÓN 1: EDICIONES ESPECIALES (GESTALT)  -->
+            <!-- ========================================== -->
+            <div id="bloque-especiales" class="mb-6">
+                <div class="flex items-baseline justify-between mb-0.5">
+                    <h3 class="text-base font-bold text-gray-900">Ediciones especiales</h3>
+                    <button id="btn-ver-todas-especiales" onclick="toggleExpandirSeccion('especiales')" type="button"
+                            class="text-xs font-bold text-[#9E472A] hover:underline">
+                        Ver todas &gt;
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">Pequeños tesoros para grandes lectores.</p>
+
+                <!-- Grid de 2 columnas (máx 2 tarjetas por defecto para reducir carga cognitiva) -->
+                <div id="grid-ediciones-especiales" class="grid grid-cols-2 gap-3">
+                    <!-- Se rellena con JS -->
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SECCIÓN 2: DE LECTOR A LECTOR (GESTALT)    -->
+            <!-- ========================================== -->
+            <div id="bloque-particulares" class="mb-5">
+                <div class="flex items-baseline justify-between mb-0.5">
+                    <h3 class="text-base font-bold text-gray-900">De lector a lector</h3>
+                    <button id="btn-ver-todos-particulares" onclick="toggleExpandirSeccion('particulares')" type="button"
+                            class="text-xs font-bold text-[#9E472A] hover:underline">
+                        Ver todos &gt;
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">Libros de particulares, historias que continúan.</p>
+
+                <!-- Lista vertical limpia con agrupación por proximidad -->
+                <div id="lista-lector-a-lector" class="flex flex-col space-y-3">
+                    <!-- Se rellena con JS -->
+                </div>
+            </div>
+
+            <!-- Estado vacío si ningún filtro coincide -->
+            <div id="estado-vacio-subastas" class="hidden py-10 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#FAF5F2] text-[#9E472A] flex items-center justify-center mx-auto mb-2.5 text-lg">
+                    <i class="fa-solid fa-gavel"></i>
+                </div>
+                <p class="text-sm font-bold text-gray-900">No hay subastas con ese filtro</p>
+                <p class="text-xs text-gray-500 mt-1 mb-3">Prueba a quitar el filtro activo o limpia la búsqueda.</p>
+                <button onclick="resetearFiltrosSubastas()" type="button"
+                        class="px-4 py-2 bg-[#9E472A] text-white text-xs font-bold rounded-xl">
+                    Ver todas las subastas
+                </button>
+            </div>
+
+            <!-- Pie de confianza (según prototipo) -->
+            <p class="text-[11px] text-gray-400 text-center pt-2 pb-3">
+                Pago seguro · Vendedores valorados por lectores
+            </p>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- MODAL: PUJAR POR UN LIBRO (RETO 1: CODIFICACIÓN REDUNDANTE)-->
+        <!-- ======================================================== -->
+        <div id="modal-pujar" class="hidden absolute inset-0 bg-black/50 z-30 flex items-end justify-center">
+            <div class="bg-white w-full rounded-t-3xl p-5 pb-8 shadow-2xl max-h-[88%] overflow-y-auto no-scrollbar">
+                <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+
+                <!-- Cabecera con etiqueta explícita de estado (Reto 1 Daltonismo) -->
+                <div class="flex items-center justify-between mb-3">
+                    <span class="inline-flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-900 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                        <i class="fa-solid fa-circle-dot text-emerald-700 text-[10px]"></i>
+                        <span>Subasta en curso</span>
+                    </span>
+                    <button onclick="cerrarModalPujar()" type="button" aria-label="Cerrar ventana de puja" class="text-gray-400 hover:text-gray-800 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Ficha del libro subastado -->
+                <div id="modal-pujar-ficha" class="flex space-x-3.5 p-3 rounded-2xl bg-[#FAF5F2] border border-[#EFE3DC] mb-4">
+                    <!-- Se rellena con JS -->
+                </div>
+
+                <!-- Bloque de Tiempo Restante y Puja Actual (jerarquía tipográfica clara) -->
+                <div class="grid grid-cols-2 gap-2.5 mb-4">
+                    <div class="p-3 rounded-xl border border-gray-200 bg-white">
+                        <span class="block text-[11px] font-medium text-gray-500">Puja actual</span>
+                        <span id="modal-puja-actual" class="block text-xl font-bold text-gray-900 mt-0.5">18,00 €</span>
+                        <span id="modal-num-pujas" class="block text-[11px] font-semibold text-gray-500 mt-0.5">6 pujas</span>
+                    </div>
+
+                    <div class="p-3 rounded-xl border border-[#E5CFC3] bg-[#FAF5F2]">
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#9E472A]">Tiempo restante</span>
+                        <div class="flex items-center space-x-1.5 mt-0.5">
+                            <i class="fa-regular fa-clock text-[#9E472A] text-sm"></i>
+                            <span id="modal-tiempo-restante" class="text-lg font-bold text-gray-900">1 d 06 h</span>
+                        </div>
+                        <span id="modal-aviso-cierre" class="block text-[10px] font-semibold text-[#863B22] mt-0.5">Cierre programado</span>
+                    </div>
+                </div>
+
+                <!-- Mensaje si el usuario ya lidera la puja -->
+                <div id="modal-banner-lider" class="hidden mb-4 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-trophy text-emerald-700"></i>
+                    <span>Tu puja es actualmente la más alta en este ejemplar.</span>
+                </div>
+
+                <!-- Formulario de Puja -->
+                <form onsubmit="confirmarPuja(event)" class="flex flex-col space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="input-importe-puja" class="text-xs font-bold text-gray-800">Tu puja máxima (€)</label>
+                            <span id="texto-puja-minima" class="text-[11px] font-semibold text-gray-500">Mínimo: 19,00 €</span>
+                        </div>
+
+                        <!-- Botones de incremento rápido -->
+                        <div class="grid grid-cols-3 gap-2 mb-2.5">
+                            <button type="button" onclick="sumarIncrementoPuja(1)"
+                                    class="py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-900 hover:bg-gray-100">
+                                +1,00 €
+                            </button>
+                            <button type="button" onclick="sumarIncrementoPuja(2)"
+                                    class="py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-900 hover:bg-gray-100">
+                                +2,00 €
+                            </button>
+                            <button type="button" onclick="sumarIncrementoPuja(5)"
+                                    class="py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-900 hover:bg-gray-100">
+                                +5,00 €
+                            </button>
+                        </div>
+
+                        <input id="input-importe-puja" type="number" step="0.50" required
+                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-base font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                        <p id="error-puja-texto" class="hidden text-[11px] font-bold text-[#9E472A] mt-1"></p>
+                    </div>
+
+                    <p class="text-[11px] text-gray-500 leading-relaxed">
+                        Si ganas la subasta, el ejemplar pasará automáticamente a tu carrito con un plazo de 48 h para completar el pago.
+                    </p>
+
+                    <button type="submit"
+                            class="w-full bg-[#9E472A] text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center space-x-2 hover:bg-[#863B22] transition-colors">
+                        <i class="fa-solid fa-gavel"></i>
+                        <span>Confirmar puja</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- MODAL: VENDER LIBRO EN SUBASTA                           -->
+        <!-- ======================================================== -->
+        <div id="modal-vender" class="hidden absolute inset-0 bg-black/50 z-30 flex items-end justify-center">
+            <div class="bg-white w-full rounded-t-3xl p-5 pb-8 shadow-2xl">
+                <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Publicar libro en subasta</h3>
+                        <p class="text-xs text-gray-500">Aparecerá en la sección De lector a lector</p>
+                    </div>
+                    <button onclick="cerrarModalVender()" type="button" class="text-gray-400 hover:text-gray-800 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form onsubmit="publicarSubastaUsuario(event)" class="flex flex-col space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Título del libro</label>
+                        <input id="vender-titulo" type="text" required placeholder="Ej: El temor de un hombre sabio"
+                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Autor</label>
+                            <input id="vender-autor" type="text" required placeholder="Ej: Patrick Rothfuss"
+                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Puja inicial (€)</label>
+                            <input id="vender-precio" type="number" min="1" step="0.50" value="10.00" required
+                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Estado del ejemplar</label>
+                        <select id="vender-estado" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
+                            <option value="Como nuevo">Como nuevo</option>
+                            <option value="Muy buen estado">Muy buen estado</option>
+                            <option value="Buen estado">Buen estado</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-[#9E472A] text-white font-bold py-3 rounded-xl text-xs hover:bg-[#863B22] mt-1">
+                        Publicar subasta ahora
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Barra de Navegación Inferior -->
+        <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex flex-col z-20">
+            <div class="flex justify-between items-center px-6 py-3">
+                <a href="inicio.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <!-- Subastas (Activo) -->
+                <a href="subastas.html" class="text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-gavel"></i>
+                </a>
+                <a href="escaner.html" class="text-gray-800 hover:text-black text-3xl flex flex-col items-center">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M4 4h4v2H6v2H4V4zm16 0h-4v2h2v2h2V4zM4 20h4v-2H6v-2H4v4zm16 0h-4v-2h2v-2h2v4zM7 7h10v10H7V7zm2 2v6h6V9H9z"/>
+                    </svg>
+                </a>
+                <a href="carrito.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+                <a href="perfil.html" class="text-gray-800 hover:text-black text-2xl flex flex-col items-center">
+                    <i class="fa-regular fa-user"></i>
+                </a>
+            </div>
+            <div class="w-full flex justify-center pb-2 pt-1">
+                <div class="w-32 h-1 bg-black rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const subastasIniciales = [
+            // SECCIÓN 1: EDICIONES ESPECIALES
+            {
+                id: "sub_got_col",
+                seccion: "especiales",
+                libroId: "juego_tronos",
+                titulo: "Juego de Tronos",
+                autor: "George RR Martin",
+                subtitulo: "Edición coleccionista",
+                vendedor: "Clara L. · Particular",
+                valoracion: "4,9",
+                pujaActual: 45.00,
+                numPujas: 12,
+                tiempoRestante: "02 h 34 min",
+                minutosRestantes: 154,
+                urgente: true,
+                portada: "img/juego_tronos.jpg"
+            },
+            {
+                id: "sub_hg_esp",
+                seccion: "especiales",
+                libroId: "juegos_hambre",
+                titulo: "Los juegos del Hambre",
+                autor: "Suzanne Collins",
+                subtitulo: "Edición especial",
+                vendedor: "Diego M. · Particular",
+                valoracion: "4,8",
+                pujaActual: 32.00,
+                numPujas: 8,
+                tiempoRestante: "05 h 12 min",
+                minutosRestantes: 312,
+                urgente: true,
+                portada: "img/juegos_hambre.jpg"
+            },
+            {
+                id: "sub_tormenta_col",
+                seccion: "especiales",
+                libroId: "tormenta_espadas",
+                titulo: "Tormenta de espadas",
+                autor: "George RR Martin",
+                subtitulo: "Edición ilustrada tapa dura",
+                vendedor: "Elena G. · Coleccionista",
+                valoracion: "5,0",
+                pujaActual: 54.00,
+                numPujas: 15,
+                tiempoRestante: "1 d 04 h",
+                minutosRestantes: 1680,
+                urgente: false,
+                portada: "img/tormenta_espadas.jpg"
+            },
+
+            // SECCIÓN 2: DE LECTOR A LECTOR
+            {
+                id: "sub_mistborn_lec",
+                seccion: "particulares",
+                libroId: "nacidos_bruma",
+                titulo: "Nacidos de la Bruma",
+                autor: "Brandon Sanderson",
+                subtitulo: "Muy buen estado",
+                vendedor: "Ana R. · Madrid",
+                valoracion: "4,9",
+                pujaActual: 18.00,
+                numPujas: 6,
+                tiempoRestante: "1 d 06 h",
+                minutosRestantes: 1800,
+                urgente: false,
+                portada: "img/nacidos_bruma.jpg"
+            },
+            {
+                id: "sub_got_lec",
+                seccion: "particulares",
+                libroId: "juego_tronos",
+                titulo: "Juego de Tronos",
+                autor: "George RR Martin",
+                subtitulo: "Como nuevo",
+                vendedor: "Pablo S. · Sevilla",
+                valoracion: "4,7",
+                pujaActual: 12.50,
+                numPujas: 3,
+                tiempoRestante: "2 d 03 h",
+                minutosRestantes: 3060,
+                urgente: false,
+                portada: "img/juego_tronos.jpg"
+            },
+            {
+                id: "sub_ciudad_lec",
+                seccion: "particulares",
+                libroId: "ciudad_hueso",
+                titulo: "Ciudad de Hueso",
+                autor: "Cassandra Clare",
+                subtitulo: "Muy buen estado",
+                vendedor: "Lucía T. · Albacete",
+                valoracion: "4,8",
+                pujaActual: 9.50,
+                numPujas: 4,
+                tiempoRestante: "2 d 11 h",
+                minutosRestantes: 3540,
+                urgente: false,
+                portada: "img/ciudad_hueso.jpg"
+            }
+        ];
+
+        let filtroPillActivo = null; // null | 'favoritos' | 'mis_pujas'
+        let expandirEspeciales = false;
+        let expandirParticulares = false;
+        let subastaActivaModal = null;
+
+        function formatearEuros(valor) {
+            return valor.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        function obtenerSubastas() {
+            const guardadas = JSON.parse(localStorage.getItem('bibliotrack_subastas_lista') || 'null');
+            if (guardadas && guardadas.length > 0) return guardadas;
+            localStorage.setItem('bibliotrack_subastas_lista', JSON.stringify(subastasIniciales));
+            return subastasIniciales;
+        }
+
+        function guardarSubastas(lista) {
+            localStorage.setItem('bibliotrack_subastas_lista', JSON.stringify(lista));
+        }
+
+        function obtenerFavoritosSubastas() {
+            return JSON.parse(localStorage.getItem('bibliotrack_subastas_fav') || '["sub_got_col"]');
+        }
+
+        function obtenerMisPujas() {
+            return JSON.parse(localStorage.getItem('bibliotrack_mis_pujas') || '["sub_mistborn_lec"]');
+        }
+
+        function toggleFavoritoSubasta(id, e) {
+            if (e) e.stopPropagation();
+            let favs = obtenerFavoritosSubastas();
+            if (favs.includes(id)) {
+                favs = favs.filter(f => f !== id);
+            } else {
+                favs.push(id);
+            }
+            localStorage.setItem('bibliotrack_subastas_fav', JSON.stringify(favs));
+            renderizarSubastas();
+        }
+
+        function toggleFiltroPill(tipo) {
+            filtroPillActivo = (filtroPillActivo === tipo) ? null : tipo;
+            renderizarSubastas();
+        }
+
+        function togglePanelFiltros() {
+            const panel = document.getElementById('panel-filtros-extra');
+            panel.classList.toggle('hidden');
+            const pill = document.getElementById('pill-filtros');
+            pill.classList.toggle('border-[#9E472A]', !panel.classList.contains('hidden'));
+            pill.classList.toggle('bg-[#FAF5F2]', !panel.classList.contains('hidden'));
+        }
+
+        function toggleExpandirSeccion(seccion) {
+            if (seccion === 'especiales') {
+                expandirEspeciales = !expandirEspeciales;
+            } else {
+                expandirParticulares = !expandirParticulares;
+            }
+            renderizarSubastas();
+        }
+
+        function limpiarBusqueda() {
+            document.getElementById('input-buscar-subastas').value = "";
+            renderizarSubastas();
+        }
+
+        function resetearFiltrosSubastas() {
+            filtroPillActivo = null;
+            document.getElementById('input-buscar-subastas').value = "";
+            document.getElementById('select-orden-subastas').value = "relevancia";
+            renderizarSubastas();
+        }
+
+        function renderizarSubastas() {
+            const todas = obtenerSubastas();
+            const favs = obtenerFavoritosSubastas();
+            const misPujas = obtenerMisPujas();
+            const query = document.getElementById('input-buscar-subastas').value.trim().toLowerCase();
+            const orden = document.getElementById('select-orden-subastas').value;
+
+            document.getElementById('btn-limpiar-busqueda').classList.toggle('hidden', query === "");
+
+            // Actualizar aspecto de las píldoras
+            const pillFav = document.getElementById('pill-favoritos');
+            const pillPujas = document.getElementById('pill-mis-pujas');
+            const badgePujas = document.getElementById('contador-mis-pujas');
+
+            if (misPujas.length > 0) {
+                badgePujas.innerText = misPujas.length;
+                badgePujas.classList.remove('hidden');
+            }
+
+            pillFav.className = (filtroPillActivo === 'favoritos')
+                ? "px-3 py-1.5 rounded-xl border border-[#9E472A] bg-[#FAF5F2] text-xs font-bold text-[#9E472A] flex items-center space-x-1.5 flex-shrink-0"
+                : "px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-800 flex items-center space-x-1.5 flex-shrink-0";
+
+            pillPujas.className = (filtroPillActivo === 'mis_pujas')
+                ? "px-3 py-1.5 rounded-xl border border-[#9E472A] bg-[#FAF5F2] text-xs font-bold text-[#9E472A] flex items-center space-x-1.5 flex-shrink-0"
+                : "px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-800 flex items-center space-x-1.5 flex-shrink-0";
+
+            // Filtrado
+            let filtradas = todas.filter(s => {
+                const coincideTexto = !query ||
+                    s.titulo.toLowerCase().includes(query) ||
+                    s.autor.toLowerCase().includes(query) ||
+                    s.subtitulo.toLowerCase().includes(query);
+                if (!coincideTexto) return false;
+                if (filtroPillActivo === 'favoritos') return favs.includes(s.id);
+                if (filtroPillActivo === 'mis_pujas') return misPujas.includes(s.id);
+                return true;
+            });
+
+            // Ordenación
+            if (orden === 'precio_asc') {
+                filtradas = [...filtradas].sort((a, b) => a.pujaActual - b.pujaActual);
+            } else if (orden === 'tiempo_asc') {
+                filtradas = [...filtradas].sort((a, b) => a.minutosRestantes - b.minutosRestantes);
+            }
+
+            const especiales = filtradas.filter(s => s.seccion === 'especiales');
+            const particulares = filtradas.filter(s => s.seccion === 'particulares');
+
+            // Control de carga cognitiva: máximo 2 tarjetas visibles por defecto (Reto 2 Gestalt)
+            const mostrarTodos = Boolean(query || filtroPillActivo);
+            const especialesVisibles = (mostrarTodos || expandirEspeciales) ? especiales : especiales.slice(0, 2);
+            const particularesVisibles = (mostrarTodos || expandirParticulares) ? particulares : particulares.slice(0, 2);
+
+            document.getElementById('bloque-especiales').classList.toggle('hidden', especiales.length === 0);
+            document.getElementById('bloque-particulares').classList.toggle('hidden', particulares.length === 0);
+            document.getElementById('estado-vacio-subastas').classList.toggle('hidden', filtradas.length > 0);
+
+            const btnEsp = document.getElementById('btn-ver-todas-especiales');
+            btnEsp.classList.toggle('hidden', especiales.length <= 2 || mostrarTodos);
+            btnEsp.innerText = expandirEspeciales ? "Ver menos" : "Ver todas >";
+
+            const btnPart = document.getElementById('btn-ver-todos-particulares');
+            btnPart.classList.toggle('hidden', particulares.length <= 2 || mostrarTodos);
+            btnPart.innerText = expandirParticulares ? "Ver menos" : "Ver todos >";
+
+            // Pintar tarjetas de Ediciones Especiales (Grid 2 columnas)
+            document.getElementById('grid-ediciones-especiales').innerHTML = especialesVisibles.map(s => {
+                const esFav = favs.includes(s.id);
+                const vaGanando = misPujas.includes(s.id);
+
+                return `
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <!-- Portada sobre tarjeta crema con tiempo y favorito -->
+                            <div class="relative bg-[#FAF5F2] border border-[#EFE3DC] rounded-2xl p-3.5 flex items-center justify-center mb-2">
+                                <a href="libro.html?id=${s.libroId}">
+                                    <img src="${s.portada}" class="w-24 h-36 object-cover rounded shadow-sm" alt="${s.titulo}">
+                                </a>
+                                <button onclick="toggleFavoritoSubasta('${s.id}', event)" type="button" aria-label="Guardar subasta en favoritos"
+                                        class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-xs">
+                                    <i class="${esFav ? 'fa-solid fa-heart text-[#9E472A]' : 'fa-regular fa-heart text-gray-800'} text-xs"></i>
+                                </button>
+                                <!-- Tiempo restante con icono (Reto 1 Daltonismo) -->
+                                <span class="absolute bottom-2 left-2 bg-white/95 border border-[#E5CFC3] px-2 py-0.5 rounded-full text-[10px] font-bold text-[#9E472A] flex items-center space-x-1 shadow-xs">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>${s.tiempoRestante}</span>
+                                </span>
+                            </div>
+
+                            <!-- Agrupación Gestalt de metadatos del libro -->
+                            <span class="block text-[10px] font-bold text-[#9E472A] truncate">${s.subtitulo}</span>
+                            <p class="text-[11px] text-gray-500 truncate">${s.autor}</p>
+                            <a href="libro.html?id=${s.libroId}" class="block text-sm font-bold text-gray-900 leading-tight truncate mb-2">${s.titulo}</a>
+
+                            <div class="flex items-baseline justify-between mb-0.5">
+                                <span class="text-[10px] text-gray-500">Puja actual</span>
+                                <span class="text-[10px] text-gray-500">${s.numPujas} pujas</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-base font-bold text-gray-900">${formatearEuros(s.pujaActual)}</span>
+                                ${vaGanando ? '<span class="text-[9px] font-bold uppercase text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Tu puja</span>' : ''}
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2.5">
+                                <span class="truncate">${s.vendedor}</span>
+                                <span class="font-bold text-[#9E472A] flex-shrink-0 ml-1">★ ${s.valoracion}</span>
+                            </div>
+                        </div>
+
+                        <!-- Botón Pujar separado por proximidad -->
+                        <button onclick="abrirModalPujar('${s.id}')" type="button"
+                                class="w-full bg-[#9E472A] text-white font-bold py-2 rounded-xl text-xs hover:bg-[#863B22] active:scale-[0.98] transition-all">
+                            Pujar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Pintar tarjetas de De lector a lector (Lista horizontal con agrupación Gestalt)
+            document.getElementById('lista-lector-a-lector').innerHTML = particularesVisibles.map(s => {
+                const vaGanando = misPujas.includes(s.id);
+
+                return `
+                    <div class="p-3 rounded-2xl border border-gray-200 bg-white flex items-center justify-between gap-3">
+                        <div class="flex items-center space-x-3 min-w-0 flex-1">
+                            <a href="libro.html?id=${s.libroId}" class="flex-shrink-0 bg-[#FAF5F2] p-1.5 rounded-xl border border-[#EFE3DC]">
+                                <img src="${s.portada}" class="w-14 h-20 object-cover rounded shadow-xs" alt="${s.titulo}">
+                            </a>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[11px] text-gray-500 truncate">${s.autor}</p>
+                                <a href="libro.html?id=${s.libroId}" class="block text-sm font-bold text-gray-900 leading-tight truncate">${s.titulo}</a>
+                                <span class="block text-[11px] font-semibold text-[#9E472A] mt-0.5">${s.subtitulo}</span>
+                                <p class="text-[11px] text-gray-500 truncate mt-0.5">${s.vendedor} · <span class="font-bold text-gray-800">★ ${s.valoracion}</span></p>
+                                <div class="mt-1.5">
+                                    <span class="block text-[10px] text-gray-500">Puja actual</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-base font-bold text-gray-900">${formatearEuros(s.pujaActual)}</span>
+                                        ${vaGanando ? '<span class="text-[9px] font-bold uppercase text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Ganando</span>' : ''}
+                                    </div>
+                                    <span class="block text-[10px] font-medium text-gray-500 mt-0.5">Quedan ${s.tiempoRestante} · ${s.numPujas} pujas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón Pujar aislado a la derecha (Ley de Proximidad) -->
+                        <button onclick="abrirModalPujar('${s.id}')" type="button"
+                                class="px-4 py-2.5 bg-[#9E472A] text-white font-bold rounded-xl text-xs hover:bg-[#863B22] active:scale-95 transition-all flex-shrink-0">
+                            Pujar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- MODAL DE PUJA INTERACTIVA ---
+        function abrirModalPujar(id) {
+            const lista = obtenerSubastas();
+            const subasta = lista.find(s => s.id === id);
+            if (!subasta) return;
+
+            subastaActivaModal = subasta;
+            const misPujas = obtenerMisPujas();
+            const vaGanando = misPujas.includes(subasta.id);
+            const pujaMinima = subasta.pujaActual + 1.00;
+
+            document.getElementById('modal-pujar-ficha').innerHTML = `
+                <img src="${subasta.portada}" class="w-14 h-20 object-cover rounded-lg shadow-sm flex-shrink-0" alt="${subasta.titulo}">
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#9E472A]">${subasta.subtitulo}</span>
+                    <h4 class="text-sm font-bold text-gray-900 truncate">${subasta.titulo}</h4>
+                    <p class="text-xs text-gray-500 truncate">${subasta.autor}</p>
+                    <p class="text-[11px] text-gray-600 mt-1">${subasta.vendedor} · ★ ${subasta.valoracion}</p>
+                </div>
+            `;
+
+            document.getElementById('modal-puja-actual').innerText = formatearEuros(subasta.pujaActual);
+            document.getElementById('modal-num-pujas').innerText = `${subasta.numPujas} pujas realizadas`;
+            document.getElementById('modal-tiempo-restante').innerText = subasta.tiempoRestante;
+            document.getElementById('modal-aviso-cierre').innerText = subasta.urgente
+                ? "Cierre en pocas horas"
+                : "Subasta activa";
+
+            document.getElementById('modal-banner-lider').classList.toggle('hidden', !vaGanando);
+            document.getElementById('texto-puja-minima').innerText = `Mínimo: ${formatearEuros(pujaMinima)}`;
+
+            const inputPuja = document.getElementById('input-importe-puja');
+            inputPuja.min = pujaMinima.toFixed(2);
+            inputPuja.value = pujaMinima.toFixed(2);
+
+            document.getElementById('error-puja-texto').classList.add('hidden');
+            document.getElementById('modal-pujar').classList.remove('hidden');
+        }
+
+        function cerrarModalPujar() {
+            document.getElementById('modal-pujar').classList.add('hidden');
+            subastaActivaModal = null;
+        }
+
+        function sumarIncrementoPuja(incremento) {
+            if (!subastaActivaModal) return;
+            const input = document.getElementById('input-importe-puja');
+            const actual = parseFloat(input.value) || subastaActivaModal.pujaActual;
+            input.value = (actual + incremento).toFixed(2);
+        }
+
+        function emitirFeedbackMultimodalPuja(esVictoria) {
+            // 1. Feedback háptico (vibración en móvil)
+            if ('vibrate' in navigator) {
+                navigator.vibrate(esVictoria ? [120, 60, 120, 60, 220] : [90, 45, 140]);
+            }
+
+            // 2. Feedback sonoro (Web Audio API)
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const notas = esVictoria ? [523.25, 659.25, 783.99, 1046.50] : [587.33, 880];
+                    notas.forEach((frec, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(frec, ctx.currentTime + i * 0.10);
+                        gain.gain.setValueAtTime(0.16, ctx.currentTime + i * 0.10);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.10 + 0.18);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + i * 0.10);
+                        osc.stop(ctx.currentTime + i * 0.10 + 0.19);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function cerrarBannerFeedback() {
+            document.getElementById('banner-feedback-subasta').classList.add('hidden');
+        }
+
+        function confirmarPuja(e) {
+            e.preventDefault();
+            if (!subastaActivaModal) return;
+
+            const input = document.getElementById('input-importe-puja');
+            const errorEl = document.getElementById('error-puja-texto');
+            const nuevaPuja = parseFloat(input.value);
+            const minima = subastaActivaModal.pujaActual + 1.00;
+
+            if (isNaN(nuevaPuja) || nuevaPuja < minima) {
+                errorEl.innerText = `La puja debe ser de al menos ${formatearEuros(minima)}.`;
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            const idSubastaPujada = subastaActivaModal.id;
+            const tituloSubastaPujada = subastaActivaModal.titulo;
+
+            // Actualizar puja en la lista persistente
+            const lista = obtenerSubastas();
+            const idx = lista.findIndex(s => s.id === idSubastaPujada);
+            if (idx !== -1) {
+                lista[idx].pujaActual = nuevaPuja;
+                lista[idx].numPujas += 1;
+                guardarSubastas(lista);
+            }
+
+            // Registrar en "Mis pujas"
+            const misPujas = obtenerMisPujas();
+            if (!misPujas.includes(idSubastaPujada)) {
+                misPujas.push(idSubastaPujada);
+                localStorage.setItem('bibliotrack_mis_pujas', JSON.stringify(misPujas));
+            }
+
+            cerrarModalPujar();
+            renderizarSubastas();
+
+            // Disparar feedback multimodal (visual + sonoro + háptico)
+            emitirFeedbackMultimodalPuja(false);
+
+            const banner = document.getElementById('banner-feedback-subasta');
+            document.getElementById('icono-feedback-subasta').className = "fa-solid fa-circle-check text-emerald-700 text-base mt-0.5";
+            document.getElementById('titulo-feedback-subasta').innerText = `¡Puja confirmada por ${formatearEuros(nuevaPuja)}!`;
+            document.getElementById('subtitulo-feedback-subasta').innerText = `Vas ganando la subasta de "${tituloSubastaPujada}".`;
+            document.getElementById('acciones-feedback-subasta').innerHTML = `
+                <span class="text-[11px] font-medium text-emerald-800">Prueba de evaluación:</span>
+                <button type="button" onclick="simularGanarSubasta('${idSubastaPujada}')"
+                        class="px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg hover:bg-black transition-colors">
+                    Simular cierre (Ganar)
+                </button>
+            `;
+            banner.classList.remove('hidden');
+        }
+
+        function simularGanarSubasta(subastaId) {
+            const lista = obtenerSubastas();
+            const subasta = lista.find(s => s.id === subastaId);
+            if (!subasta) return;
+
+            // 1. Guardar los datos de la subasta ganada para que carrito.html la pinte con su precio real
+            const detalleGanadas = JSON.parse(localStorage.getItem('bibliotrack_subastas_ganadas_detalle') || '{}');
+            detalleGanadas[subasta.id] = {
+                titulo: subasta.titulo,
+                autor: subasta.autor,
+                edicion: subasta.subtitulo,
+                vendedor: `${subasta.vendedor} · ★ ${subasta.valoracion}`,
+                precio: subasta.pujaActual,
+                tiempoRestante: "Paga en 47 h 59 min",
+                portada: subasta.portada
+            };
+            localStorage.setItem('bibliotrack_subastas_ganadas_detalle', JSON.stringify(detalleGanadas));
+
+            // 2. Añadir el ID a la lista de subastas ganadas pendientes de pago en carrito.html
+            const idsGanadas = JSON.parse(localStorage.getItem('bibliotrack_subastas_ganadas') || '[]');
+            if (!idsGanadas.includes(subasta.id)) {
+                idsGanadas.unshift(subasta.id);
+                localStorage.setItem('bibliotrack_subastas_ganadas', JSON.stringify(idsGanadas));
+            }
+
+            // 3. Quitarla de las subastas activas y de "Mis pujas"
+            const restantes = lista.filter(s => s.id !== subasta.id);
+            guardarSubastas(restantes);
+
+            const misPujas = obtenerMisPujas().filter(id => id !== subasta.id);
+            localStorage.setItem('bibliotrack_mis_pujas', JSON.stringify(misPujas));
+
+            renderizarSubastas();
+
+            // 4. Feedback multimodal de adjudicación y enlace directo al carrito
+            emitirFeedbackMultimodalPuja(true);
+
+            const banner = document.getElementById('banner-feedback-subasta');
+            document.getElementById('icono-feedback-subasta').className = "fa-solid fa-trophy text-[#9E472A] text-base mt-0.5";
+            document.getElementById('titulo-feedback-subasta').innerText = `¡Subasta adjudicada: ${subasta.titulo}!`;
+            document.getElementById('subtitulo-feedback-subasta').innerText = `Se ha añadido a "Subastas ganadas" en tu carrito por ${formatearEuros(subasta.pujaActual)}.`;
+            document.getElementById('acciones-feedback-subasta').innerHTML = `
+                <span class="text-[11px] font-bold text-[#9E472A]">Pago obligatorio (48 h)</span>
+                <a href="carrito.html" class="px-3 py-1.5 bg-[#9E472A] text-white text-[11px] font-bold rounded-lg hover:bg-[#863B22] transition-colors">
+                    Ir al carrito →
+                </a>
+            `;
+            banner.classList.remove('hidden');
+        }
+
+        // --- MODAL VENDER LIBRO ---
+        function abrirModalVender() {
+            document.getElementById('modal-vender').classList.remove('hidden');
+        }
+
+        function cerrarModalVender() {
+            document.getElementById('modal-vender').classList.add('hidden');
+        }
+
+        function publicarSubastaUsuario(e) {
+            e.preventDefault();
+            const titulo = document.getElementById('vender-titulo').value.trim();
+            const autor = document.getElementById('vender-autor').value.trim();
+            const precio = parseFloat(document.getElementById('vender-precio').value) || 10.00;
+            const estado = document.getElementById('vender-estado').value;
+            const perfil = JSON.parse(localStorage.getItem('bibliotrack_perfil') || '{"nombre":"Daniel Tébar"}');
+
+            const lista = obtenerSubastas();
+            lista.unshift({
+                id: "sub_user_" + Date.now(),
+                seccion: "particulares",
+                libroId: "nacidos_bruma",
+                titulo: titulo,
+                autor: autor,
+                subtitulo: estado,
+                vendedor: `${perfil.nombre.split(' ')[0]} · Albacete`,
+                valoracion: "5,0",
+                pujaActual: precio,
+                numPujas: 0,
+                tiempoRestante: "3 d 00 h",
+                minutosRestantes: 4320,
+                urgente: false,
+                portada: "img/nacidos_bruma.jpg"
+            });
+
+            guardarSubastas(lista);
+            document.getElementById('vender-titulo').value = "";
+            document.getElementById('vender-autor').value = "";
+            cerrarModalVender();
+            renderizarSubastas();
+        }
+
+        renderizarSubastas();
+    </script>
+
+</body>
+</html>
