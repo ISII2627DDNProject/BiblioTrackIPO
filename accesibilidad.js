@@ -59,4 +59,23 @@
 
     // Ejecutar inmediatamente al cargar el <head> para evitar parpadeos
     window.aplicarAccesibilidadGlobal();
+
+    // Ocultar la barra de estado simulada (9:41, wifi y batería) en móviles reales (< 640px)
+    // y mantenerla visible solo dentro del marco de teléfono en ordenador.
+    function ajustarBarraEstadoMovil() {
+        const esMovilReal = window.innerWidth < 640;
+        document.querySelectorAll('.fa-battery-full').forEach(iconoBateria => {
+            const barraEstado = iconoBateria.closest('.justify-between');
+            if (barraEstado) {
+                barraEstado.style.display = esMovilReal ? 'none' : '';
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ajustarBarraEstadoMovil);
+    } else {
+        ajustarBarraEstadoMovil();
+    }
+    window.addEventListener('resize', ajustarBarraEstadoMovil);
 })();
