@@ -6,6 +6,8 @@
     <title>BiblioTrack - Escanear libro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Decodificador QR compatible con iOS Safari, Android Chrome y escritorio -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -21,7 +23,7 @@
     <div class="mobile-container bg-white shadow-2xl relative flex flex-col sm:rounded-[2.5rem] sm:h-[800px] sm:border-[8px] sm:border-gray-900 overflow-hidden">
         
         <!-- ======================================================== -->
-        <!-- VISTA 1: ESCANEAR LIBRO (SEGÚN PROTOTIPO)                -->
+        <!-- VISTA 1: ESCANEAR LIBRO                                  -->
         <!-- ======================================================== -->
         <div id="vista-escaner-principal" class="flex-1 flex flex-col overflow-hidden">
             
@@ -93,11 +95,11 @@
                 <div id="panel-sensor-activo" class="hidden mb-4 p-3.5 rounded-2xl bg-[#FAF5F2] border border-[#E5CFC3] text-center">
                     <p id="texto-estado-sensor" class="text-xs font-bold text-gray-900 mb-1">Esperando etiqueta NFC...</p>
                     <p id="subtexto-estado-sensor" class="text-[11px] text-gray-600 mb-3">Acerca la parte trasera del móvil al ejemplar.</p>
-                    <video id="video-camara-qr" autoplay playsinline muted class="hidden w-full h-44 object-cover rounded-xl mb-3 bg-black"></video>
-                    <!-- Botón de demostración para simular detección en PC -->
-                    <button onclick="completarEscaneoExitoso('juego_tronos', 'NFC')" type="button"
+                    <video id="video-camara-qr" autoplay playsinline muted class="hidden w-full h-52 object-cover rounded-xl mb-3 bg-black"></video>
+                    <!-- Botón de demostración para simular detección en PC sin cámara/NFC -->
+                    <button onclick="simularEscaneoPrueba()" type="button"
                             class="px-3.5 py-1.5 bg-white border border-gray-300 rounded-lg text-[11px] font-bold text-gray-800 hover:bg-gray-50">
-                        Simular detección ahora (BT-001)
+                        Simular detección en PC (BT-001)
                     </button>
                 </div>
 
@@ -113,7 +115,7 @@
                     </button>
 
                     <form id="form-busqueda-manual" onsubmit="buscarManualmente(event)" class="hidden mt-3 flex space-x-2">
-                        <input id="input-busqueda-manual" type="text" placeholder="Ej: BT-001, Juego de Tronos..."
+                        <input id="input-busqueda-manual" type="text" placeholder="Ej: BT-009, Ciudad de Ceniza..."
                                class="flex-1 bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#9E472A]">
                         <button type="submit" class="px-3.5 py-2 bg-[#9E472A] text-white text-xs font-bold rounded-xl">
                             Ir
@@ -153,7 +155,7 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- VISTA 2: ESCANEO EXITOSO (RETO 3: FEEDBACK MULTIMODAL)   -->
+        <!-- VISTA 2: ESCANEO EXITOSO (FEEDBACK MULTIMODAL)           -->
         <!-- ======================================================== -->
         <div id="vista-escaneo-exitoso" class="hidden flex-1 flex flex-col overflow-hidden">
             <div class="bg-white pt-5 pb-3 px-4 border-b border-gray-100">
@@ -242,19 +244,51 @@
         let intervaloQr = null;
         let abortNfc = null;
 
+        function normalizarClave(str) {
+            return (str || "")
+                .toString()
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[-_\s]+/g, "_");
+        }
+
         function buscarLibroPorTexto(texto) {
-            const limpio = (texto || "").trim().toLowerCase();
-            if (!limpio) return null;
+            const raw = (texto || "").trim();
+            if (!raw) return null;
+
+            // 1. Si el QR o etiqueta NFC contiene una URL (ej. .../libro.html?id=ciudad_ceniza)
+            try {
+                const urlObj = new URL(raw, window.location.origin);
+                const paramId = urlObj.searchParams.get('id') ||
+                                urlObj.searchParams.get('nfc') ||
+                                urlObj.searchParams.get('libro') ||
+                                urlObj.searchParams.get('codigo');
+                if (paramId) {
+                    const paramNorm = normalizarClave(paramId);
+                    const porParam = catalogoLibros.find(l =>
+                        normalizarClave(l.id) === paramNorm ||
+                        normalizarClave(l.codigo) === paramNorm ||
+                        normalizarClave(l.titulo) === paramNorm
+                    );
+                    if (porParam) return porParam;
+                }
+            } catch (e) {}
+
+            // 2. Búsqueda general por id, código o título (tolerando guiones, espacios y tildes)
+            const limpioNorm = normalizarClave(raw);
             return catalogoLibros.find(l =>
-                limpio.includes(l.id) ||
-                limpio.includes(l.codigo.toLowerCase()) ||
-                limpio.includes(l.titulo.toLowerCase())
+                limpioNorm.includes(normalizarClave(l.id)) ||
+                limpioNorm.includes(normalizarClave(l.codigo)) ||
+                limpioNorm.includes(normalizarClave(l.titulo))
             ) || null;
         }
 
-        // --- RETO 3: FEEDBACK MULTIMODAL (SONORO + HÁPTICO) ---
         function emitirFeedbackMultimodal() {
-            if (window.dispararFeedbackMultimodal) window.dispararFeedbackMultimodal('exito');
+            if (window.dispararFeedbackMultimodal) {
+                window.dispararFeedbackMultimodal('exito');
+            }
         }
 
         function seleccionarModoEscaneo(modo) {
@@ -273,6 +307,16 @@
                 cardQr.className = "p-3.5 rounded-2xl border-2 border-[#9E472A] bg-white text-left transition-all";
                 cardNfc.className = "p-3.5 rounded-2xl border border-gray-200 bg-white text-left transition-all";
                 btnPrincipal.innerHTML = `<i class="fa-solid fa-camera"></i><span>Abrir cámara QR</span>`;
+            }
+        }
+
+        function procesarCodigoLeido(rawValue, origen) {
+            const encontrado = buscarLibroPorTexto(rawValue);
+            if (encontrado) {
+                completarEscaneoExitoso(encontrado.id, origen);
+            } else {
+                document.getElementById('texto-estado-sensor').innerText = "Código detectado no reconocido";
+                document.getElementById('subtexto-estado-sensor').innerText = `Contenido leído: "${rawValue}". Prueba con un QR de libro de BiblioTrack.`;
             }
         }
 
@@ -303,8 +347,7 @@
                                     break;
                                 }
                             }
-                            const encontrado = buscarLibroPorTexto(texto) || catalogoLibros[0];
-                            completarEscaneoExitoso(encontrado.id, 'NFC');
+                            procesarCodigoLeido(texto, 'NFC');
                         };
                     } catch (err) {
                         textoEstado.innerText = "No se pudo activar el chip NFC";
@@ -320,27 +363,53 @@
                 try {
                     streamCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                     video.srcObject = streamCamara;
+                    await video.play();
                     video.classList.remove('hidden');
 
-                    // Detección automática de códigos QR si el navegador soporta BarcodeDetector
-                    if ('BarcodeDetector' in window) {
-                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                        intervaloQr = setInterval(async () => {
-                            if (!streamCamara || video.readyState < 2) return;
+                    const detectorNativo = ('BarcodeDetector' in window)
+                        ? new BarcodeDetector({ formats: ['qr_code'] })
+                        : null;
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                    intervaloQr = setInterval(async () => {
+                        if (!streamCamara || video.readyState < 2 || video.videoWidth === 0) return;
+
+                        // 1. Intentar detector nativo del navegador si existe
+                        if (detectorNativo) {
                             try {
-                                const codigos = await detector.detect(video);
-                                if (codigos.length > 0) {
-                                    const encontrado = buscarLibroPorTexto(codigos[0].rawValue) || catalogoLibros[0];
-                                    completarEscaneoExitoso(encontrado.id, 'Código QR');
+                                const codigos = await detectorNativo.detect(video);
+                                if (codigos.length > 0 && codigos[0].rawValue) {
+                                    procesarCodigoLeido(codigos[0].rawValue, 'Código QR');
+                                    return;
                                 }
                             } catch (e) {}
-                        }, 400);
-                    }
+                        }
+
+                        // 2. Respaldo universal con jsQR (funciona en iOS Safari y cualquier navegador)
+                        if (typeof jsQR === 'function') {
+                            try {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                                const qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "dontInvert" });
+                                if (qr && qr.data) {
+                                    procesarCodigoLeido(qr.data, 'Código QR');
+                                }
+                            } catch (e) {}
+                        }
+                    }, 250);
                 } catch (e) {
                     video.classList.add('hidden');
                     subtextoEstado.innerText = "Cámara no disponible en este equipo. Usa el botón de simulación o búsqueda manual.";
                 }
             }
+        }
+
+        function simularEscaneoPrueba() {
+            const origen = (modoActual === 'qr') ? 'Código QR (simulado)' : 'NFC (simulado)';
+            completarEscaneoExitoso('juego_tronos', origen);
         }
 
         function toggleBusquedaManual() {
@@ -353,10 +422,10 @@
 
         function buscarManualmente(e) {
             e.preventDefault();
-            const q = document.getElementById('input-busqueda-manual').value.trim().toLowerCase();
+            const q = document.getElementById('input-busqueda-manual').value.trim();
             if (!q) return;
-            const libro = catalogoLibros.find(l =>
-                l.codigo.toLowerCase() === q || l.id.includes(q) || l.titulo.toLowerCase().includes(q) || l.autor.toLowerCase().includes(q)
+            const libro = buscarLibroPorTexto(q) || catalogoLibros.find(l =>
+                normalizarClave(l.autor).includes(normalizarClave(q))
             );
             if (libro) {
                 completarEscaneoExitoso(libro.id, 'Búsqueda manual');
@@ -409,12 +478,15 @@
             document.getElementById('video-camara-qr').classList.add('hidden');
         }
 
-        // Detección automática al abrir desde etiqueta NFC con URL (ej. escaner.html?nfc=juego_tronos)
-        const tagUrl = new URLSearchParams(window.location.search).get('nfc');
+        // Detección automática al abrir desde etiqueta NFC con URL (ej. escaner.html?nfc=ciudad_ceniza)
+        const paramsEscaner = new URLSearchParams(window.location.search);
+        const tagUrl = paramsEscaner.get('nfc') || paramsEscaner.get('id');
         if (tagUrl) {
-            const libroDetectado = buscarLibroPorTexto(tagUrl) || catalogoLibros[0];
-            window.history.replaceState(null, '', 'escaner.html');
-            completarEscaneoExitoso(libroDetectado.id, 'Etiqueta NFC');
+            const libroDetectado = buscarLibroPorTexto(tagUrl);
+            if (libroDetectado) {
+                window.history.replaceState(null, '', 'escaner.html');
+                completarEscaneoExitoso(libroDetectado.id, 'Etiqueta NFC');
+            }
         }
     </script>
 

@@ -60,9 +60,7 @@ Prototipo web *mobile-first* de una plataforma de gestión bibliotecaria, compra
 
 1. **En local:** Clona el repositorio y abre `login.html` o `inicio.html` directamente en cualquier navegador moderno (no requiere servidor ni instalación de dependencias).
 2. **En línea (GitHub Pages):**
-   * Ve a **Settings > Pages** dentro de este repositorio.
-   * En *Branch*, selecciona `main` (carpeta `/root`) y guarda los cambios.
-   * GitHub generará una URL pública para probar el prototipo directamente desde el móvil o compartirlo en la evaluación.
+   * Entrando a la url: https://isii2627ddnproject.github.io/BiblioTrackIPO/login.html
 
 ## 👥 Equipo de Desarrollo
 
