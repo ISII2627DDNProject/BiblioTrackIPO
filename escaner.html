@@ -254,28 +254,7 @@
 
         // --- RETO 3: FEEDBACK MULTIMODAL (SONORO + HÁPTICO) ---
         function emitirFeedbackMultimodal() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate([110, 50, 160]);
-            }
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    const ctx = new AudioCtx();
-                    const notas = [587.33, 880];
-                    notas.forEach((frec, i) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(frec, ctx.currentTime + i * 0.11);
-                        gain.gain.setValueAtTime(0.14, ctx.currentTime + i * 0.11);
-                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.18);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(ctx.currentTime + i * 0.11);
-                        osc.stop(ctx.currentTime + i * 0.11 + 0.19);
-                    });
-                }
-            } catch (e) {}
+            if (window.dispararFeedbackMultimodal) window.dispararFeedbackMultimodal('exito');
         }
 
         function seleccionarModoEscaneo(modo) {
